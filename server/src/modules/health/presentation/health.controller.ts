@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { GetHealthUseCase } from '../application/use-cases/get-health.usecase';
+import { HealthEchoDto } from './dto/health-echo.dto';
 
 @Controller('health')
 export class HealthController {
@@ -8,5 +9,12 @@ export class HealthController {
   @Get()
   getStatus() {
     return this.getHealth.execute();
+  }
+
+  @Get('echo')
+  echo(@Query() query: HealthEchoDto) {
+    return {
+      message: query.message,
+    };
   }
 }

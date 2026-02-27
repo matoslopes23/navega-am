@@ -28,6 +28,13 @@ Servidor padrão: `http://localhost:3000`
 - Swagger: `http://localhost:3000/docs`
 - Arquitetura e padrões: `docs/ARCHITECTURE.md`
 
+## 🔐 Autenticação
+
+Endpoints principais:
+
+- `POST /auth/register`
+- `POST /auth/login`
+
 ## �️ Banco de dados (Postgres + Prisma)
 
 Este backend usa **Prisma** como ORM e **PostgreSQL**.

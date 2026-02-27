@@ -102,7 +102,13 @@ npm run test       # testes unitários
 npm run test:e2e   # testes e2e
 ```
 
-## 🔗 Padrões do repositório
+## � Documentação de arquitetura
+
+O guia completo de arquitetura e padrões do backend está em:
+
+- `server/docs/ARCHITECTURE.md`
+
+## �🔗 Padrões do repositório
 
 - Monorepo com dois pacotes independentes.
 - Cada pacote possui seu próprio `package.json`.

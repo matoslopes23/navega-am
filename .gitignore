@@ -11,11 +11,12 @@ node_modules/
 
 # Builds
 **/dist
-/build
-/coverage
-**/dist
 **/build
 **/coverage
+
+# Environment files
+.env
+**/.env
 
 # Logs
 npm-debug.log*

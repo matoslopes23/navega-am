@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: navega-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: navega
+      POSTGRES_PASSWORD: navega
+      POSTGRES_DB: navega
+    ports:
+      - "5432:5432"
+    volumes:
+      - navega-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  navega-postgres-data:

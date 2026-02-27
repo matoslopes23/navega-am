@@ -28,7 +28,35 @@ Servidor padrão: `http://localhost:3000`
 - Swagger: `http://localhost:3000/docs`
 - Arquitetura e padrões: `docs/ARCHITECTURE.md`
 
-## 🔧 Scripts úteis
+## �️ Banco de dados (Postgres + Prisma)
+
+Este backend usa **Prisma** como ORM e **PostgreSQL**.
+
+### Subir o Postgres (Docker)
+
+Na raiz do monorepo:
+
+```bash
+docker compose up -d
+```
+
+### Variáveis de ambiente
+
+Configure o `DATABASE_URL` (veja `.env.example`):
+
+```
+DATABASE_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
+```
+
+### Prisma
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:studio
+```
+
+## �🔧 Scripts úteis
 
 ```bash
 npm run start      # modo normal

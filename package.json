@@ -1,0 +1,17 @@
+{
+  "name": "navega-am",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "server"
+  ],
+  "scripts": {
+    "dev:mobile": "npm --workspace mobile run start",
+    "dev:server": "npm --workspace server run start:dev",
+    "lint": "npm --workspaces run lint",
+    "typecheck": "npm --workspace mobile run typecheck",
+    "test": "npm --workspace server run test",
+    "build:server": "npm --workspace server run build",
+    "start:server:prod": "npm --workspace server run start:prod"
+  }
+}

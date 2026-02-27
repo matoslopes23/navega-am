@@ -1,4 +1,4 @@
-import { DomainEvent } from './domain-event';
+import { DomainEvent } from '@shared/domain/domain-event';
 
 export abstract class BaseEntity<Props extends object> {
   private readonly domainEvents: DomainEvent[] = [];

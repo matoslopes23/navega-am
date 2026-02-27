@@ -1,10 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
-import { HealthEchoDto } from './dto/health-echo.dto';
-import { GetHealthQuery } from '../application/queries/get-health.query';
-import { EchoHealthCommand } from '../application/commands/echo-health.command';
-import { GetHealthMetricsQuery } from '../application/queries/get-health-metrics.query';
+import { HealthEchoDto } from '@modules/health/presentation/dto/health-echo.dto';
+import { GetHealthQuery } from '@modules/health/application/queries/get-health.query';
+import { EchoHealthCommand } from '@modules/health/application/commands/echo-health.command';
+import { GetHealthMetricsQuery } from '@modules/health/application/queries/get-health-metrics.query';
 
 @ApiTags('Health')
 @Controller('health')

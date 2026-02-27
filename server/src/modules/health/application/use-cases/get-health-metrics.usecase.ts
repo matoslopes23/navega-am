@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UseCase } from '../../../../shared/contracts/use-case';
-import { HealthMetrics } from '../../domain/health-metrics';
+import { UseCase } from '@shared/contracts/use-case';
+import { HealthMetrics } from '@modules/health/domain/health-metrics';
 
 @Injectable()
 export class GetHealthMetricsUseCase implements UseCase<void, HealthMetrics> {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { HealthStatus } from '../../domain/health-status';
-import { HealthRepository } from '../../application/ports/health.repository';
-import { HealthStatusMapper } from '../../application/mappers/health-status.mapper';
+import { HealthStatus } from '@modules/health/domain/health-status';
+import { HealthRepository } from '@modules/health/application/ports/health.repository';
+import { HealthStatusMapper } from '@modules/health/application/mappers/health-status.mapper';
 
 @Injectable()
 export class InMemoryHealthRepository implements HealthRepository {

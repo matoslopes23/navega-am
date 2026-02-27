@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { HealthController } from './presentation/health.controller';
-import { GetHealthUseCase } from './application/use-cases/get-health.usecase';
-import { InMemoryHealthRepository } from './infrastructure/repositories/in-memory-health.repository';
-import { HEALTH_REPOSITORY } from './health.tokens';
-import { GetHealthHandler } from './application/queries/get-health.handler';
-import { EchoHealthHandler } from './application/commands/echo-health.handler';
-import { GetHealthMetricsHandler } from './application/queries/get-health-metrics.handler';
-import { GetHealthMetricsUseCase } from './application/use-cases/get-health-metrics.usecase';
+import { HealthController } from '@modules/health/presentation/health.controller';
+import { GetHealthUseCase } from '@modules/health/application/use-cases/get-health.usecase';
+import { InMemoryHealthRepository } from '@modules/health/infrastructure/repositories/in-memory-health.repository';
+import { HEALTH_REPOSITORY } from '@modules/health/health.tokens';
+import { GetHealthHandler } from '@modules/health/application/queries/get-health.handler';
+import { EchoHealthHandler } from '@modules/health/application/commands/echo-health.handler';
+import { GetHealthMetricsHandler } from '@modules/health/application/queries/get-health-metrics.handler';
+import { GetHealthMetricsUseCase } from '@modules/health/application/use-cases/get-health-metrics.usecase';
 
 @Module({
   imports: [CqrsModule],

@@ -1,6 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { GetHealthQuery } from './get-health.query';
-import { GetHealthUseCase } from '../use-cases/get-health.usecase';
+import { GetHealthQuery } from '@modules/health/application/queries/get-health.query';
+import { GetHealthUseCase } from '@modules/health/application/use-cases/get-health.usecase';
 
 @QueryHandler(GetHealthQuery)
 export class GetHealthHandler implements IQueryHandler<GetHealthQuery> {

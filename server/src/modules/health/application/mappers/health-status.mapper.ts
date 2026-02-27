@@ -1,5 +1,5 @@
-import { Mapper } from '../../../../shared/mappers/mapper';
-import { HealthStatus } from '../../domain/health-status';
+import { Mapper } from '@shared/mappers/mapper';
+import { HealthStatus } from '@modules/health/domain/health-status';
 
 type HealthStatusDTO = {
   status: string;

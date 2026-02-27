@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { HealthController } from './modules/health/presentation/health.controller';
-import { HealthModule } from './modules/health/health.module';
+import { HealthController } from '@modules/health/presentation/health.controller';
+import { HealthModule } from '@modules/health/health.module';
 
 describe('HealthController', () => {
   let healthController: HealthController;

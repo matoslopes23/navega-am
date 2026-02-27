@@ -31,4 +31,20 @@ describe('HealthController (e2e)', () => {
         expect(typeof body.timestamp).toBe('string');
       });
   });
+
+  it('/health/metrics (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/health/metrics')
+      .expect(200)
+      .expect((response) => {
+        const body = response.body as {
+          uptime: number;
+          timestamp: string;
+          memoryUsage: NodeJS.MemoryUsage;
+        };
+        expect(typeof body.uptime).toBe('number');
+        expect(typeof body.timestamp).toBe('string');
+        expect(body.memoryUsage).toBeDefined();
+      });
+  });
 });

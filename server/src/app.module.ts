@@ -7,6 +7,8 @@ import { AppLoggerModule } from '@shared/logging/logger.module';
 import { PrismaModule } from '@shared/prisma/prisma.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { UsersModule } from '@modules/users/users.module';
+import { HomeModule } from '@modules/home/home.module';
+import { TripsModule } from '@modules/trips/trips.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { UsersModule } from '@modules/users/users.module';
     PrismaModule,
     UsersModule,
     AuthModule,
+    HomeModule,
+    TripsModule,
     HealthModule,
   ],
 })

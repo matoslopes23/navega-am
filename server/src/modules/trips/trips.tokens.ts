@@ -1,0 +1,1 @@
+export const TRIPS_REPOSITORY = Symbol('TRIPS_REPOSITORY');

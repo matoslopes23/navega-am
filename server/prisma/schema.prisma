@@ -23,3 +23,69 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model Trip {
+  id            String   @id @default(uuid())
+  boatName      String
+  boatType      String
+  price         Int
+  origin        String
+  destination   String
+  departureDate DateTime
+  departureTime String
+  status        TripStatus @default(programado)
+  latitude      Float
+  longitude     Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  itineraries   Itinerary[]
+  accommodations Accommodation[]
+
+  @@index([origin, destination])
+  @@index([departureDate])
+}
+
+model Itinerary {
+  id          String   @id @default(uuid())
+  tripId      String
+  name        String
+  type        ItineraryType
+  time        String
+  description String
+  status      String?
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([order])
+}
+
+model Accommodation {
+  id          String   @id @default(uuid())
+  tripId      String
+  name        String
+  price       Int
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+enum TripStatus {
+  em_transito
+  no_porto
+  programado
+}
+
+enum ItineraryType {
+  saida
+  escala
+  destino
+}

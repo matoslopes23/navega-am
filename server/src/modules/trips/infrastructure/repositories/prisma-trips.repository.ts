@@ -84,6 +84,10 @@ export class PrismaTripsRepository implements TripsRepository {
       name: trip.boatName,
       status,
       statusLabel,
+      userDepartureDate: trip.userDepartureDate
+        ? trip.userDepartureDate.toISOString().split('T')[0]
+        : undefined,
+      userDepartureTime: trip.userDepartureTime ?? undefined,
       currentPosition: {
         latitude: trip.latitude,
         longitude: trip.longitude,
@@ -106,5 +110,34 @@ export class PrismaTripsRepository implements TripsRepository {
       })),
       notificationsEnabled: false,
     };
+  }
+
+  async updateContribution(
+    id: string,
+    data: {
+      userDepartureDate?: Date;
+      userDepartureTime?: string;
+    },
+  ): Promise<TripDetails | null> {
+    const existing = await this.prisma.trip.findUnique({ where: { id } });
+    if (!existing) return null;
+
+    const updated = await this.prisma.trip.update({
+      where: { id },
+      data: {
+        userDepartureDate: data.userDepartureDate,
+        userDepartureTime: data.userDepartureTime,
+      },
+      include: {
+        itineraries: {
+          orderBy: { order: 'asc' },
+        },
+        accommodations: {
+          orderBy: { price: 'asc' },
+        },
+      },
+    });
+
+    return this.findDetailsById(updated.id);
   }
 }

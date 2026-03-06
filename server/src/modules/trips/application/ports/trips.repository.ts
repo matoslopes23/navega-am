@@ -21,4 +21,11 @@ export type TripsSearchFilters = {
 export interface TripsRepository {
   search(filters: TripsSearchFilters): Promise<Trip[]>;
   findDetailsById(id: string): Promise<TripDetails | null>;
+  updateContribution(
+    id: string,
+    data: {
+      userDepartureDate?: Date;
+      userDepartureTime?: string;
+    },
+  ): Promise<TripDetails | null>;
 }

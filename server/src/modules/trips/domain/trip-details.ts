@@ -24,6 +24,8 @@ export type TripDetails = {
   name: string;
   status: 'em-transito' | 'no-porto' | 'programado';
   statusLabel: string;
+  userDepartureDate?: string;
+  userDepartureTime?: string;
   currentPosition: TripMapPosition;
   itinerary: TripItineraryStop[];
   accommodationsStatus: 'disponivel' | 'esgotado';

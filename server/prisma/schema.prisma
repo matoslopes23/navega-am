@@ -33,6 +33,8 @@ model Trip {
   destination   String
   departureDate DateTime
   departureTime String
+  userDepartureDate DateTime?
+  userDepartureTime String?
   status        TripStatus @default(programado)
   latitude      Float
   longitude     Float

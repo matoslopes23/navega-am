@@ -1,9 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { SearchTripsUseCase } from '@modules/trips/application/use-cases/search-trips.usecase';
 import { GetTripDetailsUseCase } from '@modules/trips/application/use-cases/get-trip-details.usecase';
+import { UpdateTripContributionUseCase } from '@modules/trips/application/use-cases/update-trip-contribution.usecase';
 import { SearchTripsDto } from '@modules/trips/application/dto/search-trips.dto';
+import { UpdateTripContributionDto } from '@modules/trips/application/dto/update-trip-contribution.dto';
 import { TripResponseDto } from '@modules/trips/presentation/dto/trip-response.dto';
 import { TripDetailsResponseDto } from '@modules/trips/presentation/dto/trip-details-response.dto';
 
@@ -13,6 +15,7 @@ export class TripsController {
   constructor(
     private readonly searchTrips: SearchTripsUseCase,
     private readonly getTripDetails: GetTripDetailsUseCase,
+    private readonly updateTripContribution: UpdateTripContributionUseCase,
   ) {}
 
   @Get('search')
@@ -40,5 +43,21 @@ export class TripsController {
   })
   getDetails(@Param('id') id: string) {
     return this.getTripDetails.execute(id);
+  }
+
+  @Patch(':id/contribution')
+  @ApiOkResponse({
+    description: 'Atualiza o horário informado pela comunidade para a viagem.',
+    type: TripDetailsResponseDto,
+  })
+  updateContribution(
+    @Param('id') id: string,
+    @Body() body: UpdateTripContributionDto,
+  ) {
+    return this.updateTripContribution.execute({
+      id,
+      userDepartureDate: body.userDepartureDate,
+      userDepartureTime: body.userDepartureTime,
+    });
   }
 }

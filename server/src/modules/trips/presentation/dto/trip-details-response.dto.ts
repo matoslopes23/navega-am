@@ -58,6 +58,12 @@ export class TripDetailsResponseDto {
   @ApiProperty({ example: 'EM TRÂNSITO' })
   statusLabel!: string;
 
+  @ApiProperty({ example: '2026-03-10', required: false })
+  userDepartureDate?: string;
+
+  @ApiProperty({ example: '14:30', required: false })
+  userDepartureTime?: string;
+
   @ApiProperty({ type: TripMapPositionDto })
   currentPosition!: TripMapPositionDto;
 

@@ -1,4 +1,5 @@
 import { Trip } from '@modules/trips/domain/trip';
+import { TripDetails } from '@modules/trips/domain/trip-details';
 
 export type TripsSearchFilters = {
   origin: string;
@@ -19,4 +20,5 @@ export type TripsSearchFilters = {
 
 export interface TripsRepository {
   search(filters: TripsSearchFilters): Promise<Trip[]>;
+  findDetailsById(id: string): Promise<TripDetails | null>;
 }

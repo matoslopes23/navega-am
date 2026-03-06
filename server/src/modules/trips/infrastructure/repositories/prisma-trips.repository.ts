@@ -6,6 +6,7 @@ import {
   TripsSearchFilters,
 } from '@modules/trips/application/ports/trips.repository';
 import { Trip } from '@modules/trips/domain/trip';
+import { TripDetails } from '@modules/trips/domain/trip-details';
 
 @Injectable()
 export class PrismaTripsRepository implements TripsRepository {
@@ -13,8 +14,14 @@ export class PrismaTripsRepository implements TripsRepository {
 
   async search(filters: TripsSearchFilters): Promise<Trip[]> {
     const where: Record<string, unknown> = {
-      origin: filters.origin,
-      destination: filters.destination,
+      origin: {
+        equals: filters.origin,
+        mode: 'insensitive',
+      },
+      destination: {
+        equals: filters.destination,
+        mode: 'insensitive',
+      },
     };
 
     if (filters.dateRange) {
@@ -47,5 +54,57 @@ export class PrismaTripsRepository implements TripsRepository {
       origin: trip.origin,
       destination: trip.destination,
     }));
+  }
+
+  async findDetailsById(id: string): Promise<TripDetails | null> {
+    const trip = await this.prisma.trip.findUnique({
+      where: { id },
+      include: {
+        itineraries: {
+          orderBy: { order: 'asc' },
+        },
+        accommodations: {
+          orderBy: { price: 'asc' },
+        },
+      },
+    });
+
+    if (!trip) return null;
+
+    const status = trip.status.replaceAll('_', '-') as TripDetails['status'];
+    const statusLabelMap: Record<TripDetails['status'], string> = {
+      'em-transito': 'EM TRÂNSITO',
+      'no-porto': 'NO PORTO',
+      programado: 'PROGRAMADO',
+    };
+    const statusLabel = statusLabelMap[status];
+
+    return {
+      id: trip.id,
+      name: trip.boatName,
+      status,
+      statusLabel,
+      currentPosition: {
+        latitude: trip.latitude,
+        longitude: trip.longitude,
+      },
+      itinerary: trip.itineraries.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type as TripDetails['itinerary'][number]['type'],
+        time: item.time,
+        description: item.description,
+        status: item.status ?? undefined,
+      })),
+      accommodationsStatus:
+        trip.accommodations.length > 0 ? 'disponivel' : 'esgotado',
+      accommodations: trip.accommodations.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: `R$ ${item.price}`,
+        description: item.description ?? undefined,
+      })),
+      notificationsEnabled: false,
+    };
   }
 }

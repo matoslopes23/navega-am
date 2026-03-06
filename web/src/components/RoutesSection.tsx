@@ -1,42 +1,15 @@
 import { Ship, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RouteCard from "./RouteCard";
+import { TripSearchResult } from "@/lib/trips";
 
-const routes = [
-  {
-    type: "Lancha Jato",
-    status: "docked" as const,
-    name: "Expresso Ajuricaba",
-    route: "Manaus → Itacoatiara",
-    price: "R$ 150",
-    priceLabel: "por passageiro",
-    departureTime: "07:30",
-    duration: "4h 30min",
-  },
-  {
-    type: "Recreio",
-    status: "navigating" as const,
-    name: "N/M Comandante Souza",
-    route: "Manaus → Parintins",
-    price: "R$ 110",
-    priceLabel: "Rede / por pessoa",
-    departureTime: "19:00",
-    duration: "18h 00min",
-  },
-  {
-    type: "Ferry / Balsa",
-    status: "maintenance" as const,
-    name: "Balsa Rio Negro",
-    route: "Manaus → Careiro",
-    price: "R$ 80",
-    priceLabel: "Veículo leve",
-    departureTime: "A cada 1h",
-    duration: "0h 45min",
-    departureLabel: "Saídas",
-  },
-];
+type RoutesSectionProps = {
+  routes: TripSearchResult[];
+  isLoading?: boolean;
+  error?: string;
+};
 
-const RoutesSection = () => {
+const RoutesSection = ({ routes, isLoading = false, error }: RoutesSectionProps) => {
   return (
     <section className="py-16 px-4">
       <div className="container mx-auto max-w-5xl">
@@ -58,11 +31,38 @@ const RoutesSection = () => {
           </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {routes.map((route) => (
-            <RouteCard key={route.name} {...route} />
-          ))}
-        </div>
+        {isLoading && (
+          <p className="text-sm text-muted-foreground">Buscando rotas...</p>
+        )}
+        {error && (
+          <p className="text-sm text-destructive">
+            Não foi possível carregar as rotas. Tente novamente.
+          </p>
+        )}
+        {!isLoading && !error && routes.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Informe origem e destino para buscar rotas disponíveis.
+          </p>
+        )}
+
+        {!isLoading && !error && routes.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {routes.map((route) => (
+              <RouteCard
+                key={route.id}
+                id={route.id}
+                type={route.boatType}
+                status="navigating"
+                name={route.boatName}
+                route={`${route.origin} → ${route.destination}`}
+                price={route.price}
+                priceLabel="por passageiro"
+                departureTime={route.departureTime}
+                duration="-"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

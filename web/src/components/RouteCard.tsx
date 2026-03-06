@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 type RouteStatus = "docked" | "navigating" | "maintenance";
 
 interface RouteCardProps {
+  id: string;
   type: string;
   status: RouteStatus;
   name: string;
@@ -35,6 +36,7 @@ const statusConfig: Record<RouteStatus, { label: string; icon: React.ReactNode; 
 };
 
 const RouteCard = ({
+  id,
   type,
   status,
   name,
@@ -87,7 +89,7 @@ const RouteCard = ({
           </div>
         </div>
 
-        <Link to={`/route/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))}`}>
+  <Link to={`/route/${encodeURIComponent(id)}`}>
           <Button
             variant="outline"
             className="w-full mt-5 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"

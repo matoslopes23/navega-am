@@ -1,8 +1,28 @@
 import { MapPin, Navigation, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { TripSearchParams } from "@/lib/trips";
 
-const SearchBar = () => {
+type SearchBarProps = {
+  onSearch: (params: TripSearchParams) => void;
+  isLoading?: boolean;
+};
+
+const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+
+  const handleSearch = () => {
+    if (!origin.trim() || !destination.trim()) return;
+    onSearch({
+      origin: origin.trim(),
+      destination: destination.trim(),
+      page: 1,
+      limit: 12,
+    });
+  };
+
   return (
     <section className="relative z-20 -mt-12 px-4">
       <div className="container mx-auto max-w-4xl">
@@ -13,6 +33,8 @@ const SearchBar = () => {
               <Input
                 placeholder="Origem (ex: Manaus)"
                 className="pl-10 h-12 bg-muted/50 border-0 text-sm"
+                value={origin}
+                onChange={(event) => setOrigin(event.target.value)}
               />
             </div>
             <div className="relative flex-1">
@@ -20,11 +42,17 @@ const SearchBar = () => {
               <Input
                 placeholder="Destino (ex: Parintins)"
                 className="pl-10 h-12 bg-muted/50 border-0 text-sm"
+                value={destination}
+                onChange={(event) => setDestination(event.target.value)}
               />
             </div>
-            <Button className="h-12 px-8 bg-primary hover:bg-river-light text-primary-foreground font-semibold gap-2">
+            <Button
+              className="h-12 px-8 bg-primary hover:bg-river-light text-primary-foreground font-semibold gap-2"
+              onClick={handleSearch}
+              disabled={isLoading}
+            >
               <Search className="h-4 w-4" />
-              Buscar Rotas
+              {isLoading ? "Buscando..." : "Buscar Rotas"}
             </Button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   Share2,
   Bell,
@@ -23,20 +23,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import boatImage from "@/assets/boat-detail.jpg";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getTripDetails } from "@/lib/trips";
 
-type TicketType = "hammock" | "seat" | "cabin";
-
-const tickets: { id: TicketType; label: string; tier: string; price: string; priceLabel: string; icon: React.ReactNode }[] = [
-  { id: "hammock", label: "Rede (Hammock)", tier: "STANDARD", price: "R$ 85", priceLabel: "por adulto", icon: <BedDouble className="h-5 w-5" /> },
-  { id: "seat", label: "Cadeira (Seat)", tier: "EXECUTIVE", price: "R$ 120", priceLabel: "por adulto", icon: <Armchair className="h-5 w-5" /> },
-  { id: "cabin", label: "Camarote (Cabin)", tier: "PREMIUM", price: "R$ 350", priceLabel: "2 pessoas", icon: <Ship className="h-5 w-5" /> },
-];
-
-const schedule = [
-  { type: "Departure", label: "Partida", location: "Porto de Manaus (Roadway)", time: "08:00 AM", status: "Scheduled" },
-  { type: "Intermediate Stop", label: "Parada Intermediária", location: "Itapiranga Terminal", time: "02:30 PM", status: "Estimated Arrival" },
-  { type: "Final Arrival", label: "Chegada Final", location: "Porto de Itacoatiara", time: "06:45 PM", status: "Estimated Arrival" },
-];
+type TicketType = string;
 
 const amenities = [
   { icon: <Wifi className="h-6 w-6" />, label: "FREE WI-FI" },
@@ -46,16 +36,31 @@ const amenities = [
 ];
 
 const RouteDetails = () => {
-  const [selectedTicket, setSelectedTicket] = useState<TicketType>("cabin");
+  const [selectedTicket, setSelectedTicket] = useState<TicketType>("");
+  const { id } = useParams();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["trip-details", id],
+    queryFn: () => getTripDetails(id as string),
+    enabled: Boolean(id),
+  });
+
+  const tickets = data?.accommodations.map((ticket) => ({
+    id: ticket.id as TicketType,
+    label: ticket.name,
+    tier: data.accommodationsStatus === "disponivel" ? "DISPONÍVEL" : "ESGOTADO",
+    price: ticket.price,
+    priceLabel: "por passageiro",
+    icon: <Ship className="h-5 w-5" />,
+  }));
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero banner */}
+  {/* Hero banner */}
       <div className="relative pt-14">
         <div className="h-56 md:h-72 overflow-hidden">
-          <img src={boatImage} alt="Expresso Ajuricaba" className="w-full h-full object-cover" />
+          <img src={boatImage} alt={data?.name ?? "Detalhe da rota"} className="w-full h-full object-cover" />
           <div className="absolute inset-0 top-14 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         </div>
 
@@ -64,12 +69,16 @@ const RouteDetails = () => {
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-status-active text-primary-foreground">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
-                IN TRANSIT
+                {data?.statusLabel ?? "CARREGANDO"}
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground">Expresso Ajuricaba</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground">
+              {data?.name ?? "Carregando..."}
+            </h1>
             <p className="text-sm text-primary-foreground/80 flex items-center gap-1 mt-1">
-              <MapPin className="h-3.5 w-3.5" /> Manaus → Itacoatiara
+              <MapPin className="h-3.5 w-3.5" />
+              {data?.itinerary?.[0]?.name ?? "Origem"} →
+              {data?.itinerary?.[data.itinerary.length - 1]?.name ?? "Destino"}
             </p>
 
             <div className="flex gap-2 mt-3">
@@ -86,6 +95,16 @@ const RouteDetails = () => {
 
       {/* Content */}
       <div className="container mx-auto max-w-5xl px-4 py-8">
+        {isLoading && (
+          <p className="text-sm text-muted-foreground mb-6">
+            Carregando detalhes da rota...
+          </p>
+        )}
+        {error && (
+          <p className="text-sm text-destructive mb-6">
+            Não foi possível carregar os detalhes.
+          </p>
+        )}
         <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
           <ArrowLeft className="h-4 w-4" /> Voltar aos resultados
         </Link>
@@ -122,29 +141,29 @@ const RouteDetails = () => {
                   <div className="absolute left-[11px] top-3 bottom-3 w-0.5 bg-border" />
 
                   <div className="space-y-8">
-                    {schedule.map((stop, i) => (
+                    {(data?.itinerary ?? []).map((stop, i) => (
                       <div key={i} className="flex gap-4 relative">
                         <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 z-10 ${
                           i === 0 ? "border-primary bg-primary text-primary-foreground" :
-                          i === schedule.length - 1 ? "border-primary bg-card" :
+                          i === (data?.itinerary.length ?? 0) - 1 ? "border-primary bg-card" :
                           "border-status-active bg-card"
                         }`}>
                           {i === 0 && <Navigation2 className="h-3 w-3" />}
                           {i === 1 && <span className="h-2 w-2 rounded-full bg-status-active" />}
-                          {i === schedule.length - 1 && <MapPin className="h-3 w-3 text-primary" />}
+                          {i === (data?.itinerary.length ?? 0) - 1 && <MapPin className="h-3 w-3 text-primary" />}
                         </div>
                         <div className="flex-1 flex items-start justify-between">
                           <div>
                             <span className={`text-xs font-medium ${
-                              i === 0 ? "text-primary" : i === 1 ? "text-status-active" : "text-primary"
-                            }`}>{stop.label}</span>
-                            <p className="font-semibold text-foreground">{stop.location}</p>
+                              i === 0 ? "text-primary" : i === (data?.itinerary.length ?? 0) - 1 ? "text-primary" : "text-status-active"
+                            }`}>{stop.name}</span>
+                            <p className="font-semibold text-foreground">{stop.description}</p>
                           </div>
                           <div className="text-right">
                             <span className={`text-sm font-bold ${
                               i === 0 ? "text-foreground" : "text-primary"
                             }`}>{stop.time}</span>
-                            <p className="text-[11px] text-muted-foreground">{stop.status}</p>
+                            <p className="text-[11px] text-muted-foreground">{stop.status ?? ""}</p>
                           </div>
                         </div>
                       </div>
@@ -173,7 +192,7 @@ const RouteDetails = () => {
                 <h2 className="font-semibold text-sm">Tickets & Accommodations</h2>
               </div>
               <div className="p-4 space-y-2">
-                {tickets.map((t) => (
+                {(tickets ?? []).map((t) => (
                   <button
                     key={t.id}
                     onClick={() => setSelectedTicket(t.id)}

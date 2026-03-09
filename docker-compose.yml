@@ -14,5 +14,31 @@ services:
     volumes:
       - navega-postgres-data:/var/lib/postgresql/data
 
+  api:
+    build:
+      context: ./server
+    container_name: navega-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://navega:navega@postgres:5432/navega
+      JWT_SECRET: change-me-now
+      PORT: 3000
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+
+  web:
+    build:
+      context: ./web
+    container_name: navega-web
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
 volumes:
   navega-postgres-data:

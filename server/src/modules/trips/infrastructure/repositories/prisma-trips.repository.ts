@@ -140,4 +140,25 @@ export class PrismaTripsRepository implements TripsRepository {
 
     return this.findDetailsById(updated.id);
   }
+
+  async listLocations(): Promise<{
+    origins: string[];
+    destinations: string[];
+  }> {
+    const origins = await this.prisma.trip.findMany({
+      select: { origin: true },
+      distinct: ['origin'],
+      orderBy: { origin: 'asc' },
+    });
+    const destinations = await this.prisma.trip.findMany({
+      select: { destination: true },
+      distinct: ['destination'],
+      orderBy: { destination: 'asc' },
+    });
+
+    return {
+      origins: origins.map((item) => item.origin),
+      destinations: destinations.map((item) => item.destination),
+    };
+  }
 }

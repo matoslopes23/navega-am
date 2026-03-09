@@ -65,3 +65,8 @@ export const searchTrips = async (params: TripSearchParams) => {
 
 export const getTripDetails = async (id: string) =>
   apiFetch<TripDetails>(`/trips/${id}`);
+
+export const getTripLocations = async () =>
+  apiFetch<{ origins: string[]; destinations: string[] }>(
+    '/trips/locations',
+  );

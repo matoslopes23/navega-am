@@ -4,10 +4,12 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { SearchTripsUseCase } from '@modules/trips/application/use-cases/search-trips.usecase';
 import { GetTripDetailsUseCase } from '@modules/trips/application/use-cases/get-trip-details.usecase';
 import { UpdateTripContributionUseCase } from '@modules/trips/application/use-cases/update-trip-contribution.usecase';
+import { ListTripLocationsUseCase } from '@modules/trips/application/use-cases/list-trip-locations.usecase';
 import { SearchTripsDto } from '@modules/trips/application/dto/search-trips.dto';
 import { UpdateTripContributionDto } from '@modules/trips/application/dto/update-trip-contribution.dto';
 import { TripResponseDto } from '@modules/trips/presentation/dto/trip-response.dto';
 import { TripDetailsResponseDto } from '@modules/trips/presentation/dto/trip-details-response.dto';
+import { TripLocationsResponseDto } from '@modules/trips/presentation/dto/trip-locations-response.dto';
 
 @ApiTags('Trips')
 @Controller('trips')
@@ -16,7 +18,17 @@ export class TripsController {
     private readonly searchTrips: SearchTripsUseCase,
     private readonly getTripDetails: GetTripDetailsUseCase,
     private readonly updateTripContribution: UpdateTripContributionUseCase,
+    private readonly listTripLocations: ListTripLocationsUseCase,
   ) {}
+
+  @Get('locations')
+  @ApiOkResponse({
+    description: 'Lista de origens e destinos disponíveis nas viagens.',
+    type: TripLocationsResponseDto,
+  })
+  listLocations() {
+    return this.listTripLocations.execute();
+  }
 
   @Get('search')
   @ApiOkResponse({

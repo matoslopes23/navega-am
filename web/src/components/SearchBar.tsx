@@ -1,8 +1,14 @@
 import { MapPin, Navigation, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { TripSearchParams } from "@/lib/trips";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { getTripLocations, TripSearchParams } from "@/lib/trips";
 
 type SearchBarProps = {
   onSearch: (params: TripSearchParams) => void;
@@ -12,6 +18,26 @@ type SearchBarProps = {
 const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const [origins, setOrigins] = useState<string[]>([]);
+  const [destinations, setDestinations] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getTripLocations()
+      .then((data) => {
+        if (!isMounted) return;
+        setOrigins(data.origins);
+        setDestinations(data.destinations);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setOrigins([]);
+        setDestinations([]);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSearch = () => {
     if (!origin.trim() || !destination.trim()) return;
@@ -30,26 +56,38 @@ const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Origem (ex: Manaus)"
-                className="pl-10 h-12 bg-muted/50 border-0 text-sm"
-                value={origin}
-                onChange={(event) => setOrigin(event.target.value)}
-              />
+              <Select value={origin} onValueChange={setOrigin}>
+                <SelectTrigger className="pl-10 h-12 bg-muted/50 border-0 text-sm">
+                  <SelectValue placeholder="Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  {origins.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="relative flex-1">
               <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Destino (ex: Parintins)"
-                className="pl-10 h-12 bg-muted/50 border-0 text-sm"
-                value={destination}
-                onChange={(event) => setDestination(event.target.value)}
-              />
+              <Select value={destination} onValueChange={setDestination}>
+                <SelectTrigger className="pl-10 h-12 bg-muted/50 border-0 text-sm">
+                  <SelectValue placeholder="Destino" />
+                </SelectTrigger>
+                <SelectContent>
+                  {destinations.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button
               className="h-12 px-8 bg-primary hover:bg-river-light text-primary-foreground font-semibold gap-2"
               onClick={handleSearch}
-              disabled={isLoading}
+              disabled={isLoading || origins.length === 0 || destinations.length === 0}
             >
               <Search className="h-4 w-4" />
               {isLoading ? "Buscando..." : "Buscar Rotas"}

@@ -28,4 +28,5 @@ export interface TripsRepository {
       userDepartureTime?: string;
     },
   ): Promise<TripDetails | null>;
+  listLocations(): Promise<{ origins: string[]; destinations: string[] }>;
 }

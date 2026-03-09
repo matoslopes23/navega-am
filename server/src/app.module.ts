@@ -9,6 +9,7 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { UsersModule } from '@modules/users/users.module';
 import { HomeModule } from '@modules/home/home.module';
 import { TripsModule } from '@modules/trips/trips.module';
+import { UrlPingService } from '@shared/jobs/url-ping.service';
 
 @Module({
   imports: [
@@ -27,5 +28,6 @@ import { TripsModule } from '@modules/trips/trips.module';
     TripsModule,
     HealthModule,
   ],
+  providers: [UrlPingService],
 })
 export class AppModule {}

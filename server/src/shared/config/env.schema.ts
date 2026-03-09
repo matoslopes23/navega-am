@@ -6,4 +6,6 @@ export const envSchema = Joi.object({
     .default('development'),
   PORT: Joi.number().default(3000),
   JWT_SECRET: Joi.string().min(10).required(),
+  PING_URL: Joi.string().uri().optional(),
+  PING_INTERVAL_MS: Joi.number().min(5000).optional(),
 });

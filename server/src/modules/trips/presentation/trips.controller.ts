@@ -1,12 +1,22 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { SearchTripsUseCase } from '@modules/trips/application/use-cases/search-trips.usecase';
 import { GetTripDetailsUseCase } from '@modules/trips/application/use-cases/get-trip-details.usecase';
 import { UpdateTripContributionUseCase } from '@modules/trips/application/use-cases/update-trip-contribution.usecase';
 import { ListTripLocationsUseCase } from '@modules/trips/application/use-cases/list-trip-locations.usecase';
+import { CreateTripUseCase } from '@modules/trips/application/use-cases/create-trip.usecase';
 import { SearchTripsDto } from '@modules/trips/application/dto/search-trips.dto';
 import { UpdateTripContributionDto } from '@modules/trips/application/dto/update-trip-contribution.dto';
+import { CreateTripDto } from '@modules/trips/application/dto/create-trip.dto';
 import { TripResponseDto } from '@modules/trips/presentation/dto/trip-response.dto';
 import { TripDetailsResponseDto } from '@modules/trips/presentation/dto/trip-details-response.dto';
 import { TripLocationsResponseDto } from '@modules/trips/presentation/dto/trip-locations-response.dto';
@@ -19,6 +29,7 @@ export class TripsController {
     private readonly getTripDetails: GetTripDetailsUseCase,
     private readonly updateTripContribution: UpdateTripContributionUseCase,
     private readonly listTripLocations: ListTripLocationsUseCase,
+    private readonly createTrip: CreateTripUseCase,
   ) {}
 
   @Get('locations')
@@ -28,6 +39,15 @@ export class TripsController {
   })
   listLocations() {
     return this.listTripLocations.execute();
+  }
+
+  @Post()
+  @ApiCreatedResponse({
+    description: 'Viagem cadastrada com sucesso.',
+    type: TripDetailsResponseDto,
+  })
+  create(@Body() body: CreateTripDto) {
+    return this.createTrip.execute(body);
   }
 
   @Get('search')

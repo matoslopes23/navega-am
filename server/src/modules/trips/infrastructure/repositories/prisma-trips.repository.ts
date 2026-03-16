@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma, TripStatus } from '@prisma/client';
 
 import { PrismaService } from '@shared/prisma/prisma.service';
 import {
   TripsRepository,
+  CreateTripInput,
   TripsSearchFilters,
 } from '@modules/trips/application/ports/trips.repository';
 import { Trip } from '@modules/trips/domain/trip';
@@ -110,6 +112,62 @@ export class PrismaTripsRepository implements TripsRepository {
       })),
       notificationsEnabled: false,
     };
+  }
+
+  async create(input: CreateTripInput): Promise<TripDetails> {
+    const createData: Prisma.TripCreateInput = {
+      boatName: input.boatName,
+      boatType: input.boatType,
+      price: input.price,
+      origin: input.origin,
+      destination: input.destination,
+      departureDate: input.departureDate,
+      departureTime: input.departureTime,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      ...(input.status
+        ? {
+            status: input.status.replaceAll('-', '_') as TripStatus,
+          }
+        : {}),
+      ...(input.itinerary?.length
+        ? {
+            itineraries: {
+              create: input.itinerary.map((item, index) => ({
+                name: item.name,
+                type: item.type,
+                time: item.time,
+                description: item.description,
+                status: item.status,
+                order: item.order ?? index + 1,
+              })),
+            },
+          }
+        : {}),
+      ...(input.accommodations?.length
+        ? {
+            accommodations: {
+              create: input.accommodations.map((item) => ({
+                name: item.name,
+                price: item.price,
+                description: item.description,
+              })),
+            },
+          }
+        : {}),
+    };
+
+    const trip = await this.prisma.trip.create({
+      data: createData,
+    });
+
+    const details = await this.findDetailsById(trip.id);
+
+    if (!details) {
+      throw new Error('Viagem recém criada não encontrada.');
+    }
+
+    return details;
   }
 
   async updateContribution(

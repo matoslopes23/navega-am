@@ -11,6 +11,8 @@ import { UsersModule } from '@modules/users/users.module';
 import { HomeModule } from '@modules/home/home.module';
 import { TripsModule } from '@modules/trips/trips.module';
 import { UrlPingService } from '@shared/jobs/url-ping.service';
+import { TrackingModule } from './modules/tracking/tracking.module';
+import { RealTimeModule } from './modules/real-time/real-time.moule';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { UrlPingService } from '@shared/jobs/url-ping.service';
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
           password: configService.get<string>('REDIS_PASSWORD'),
+          ...(configService.get<string>('REDIS_HOST')?.includes('upstash') ? { tls: {} } : {}),
         },
         defaultJobOptions: {
           removeOnComplete: true,
@@ -48,6 +51,8 @@ import { UrlPingService } from '@shared/jobs/url-ping.service';
     HomeModule,
     TripsModule,
     HealthModule,
+    TrackingModule,
+    RealTimeModule,
   ],
   providers: [UrlPingService],
 })

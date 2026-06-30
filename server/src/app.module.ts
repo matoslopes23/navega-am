@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
 
 import { HealthModule } from '@modules/health/health.module';
 import { envSchema } from '@shared/config/env.schema';
@@ -20,6 +21,26 @@ import { UrlPingService } from '@shared/jobs/url-ping.service';
         abortEarly: false,
       },
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+          password: configService.get<string>('REDIS_PASSWORD'),
+        },
+        defaultJobOptions: {
+          removeOnComplete: true,
+          removeOnFail: 100,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+        },
+      }),
+    }),
     AppLoggerModule,
     PrismaModule,
     UsersModule,
@@ -30,4 +51,4 @@ import { UrlPingService } from '@shared/jobs/url-ping.service';
   ],
   providers: [UrlPingService],
 })
-export class AppModule {}
+export class AppModule { }

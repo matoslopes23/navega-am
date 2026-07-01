@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
 
 import { HealthModule } from '@modules/health/health.module';
 import { envSchema } from '@shared/config/env.schema';
@@ -10,6 +11,8 @@ import { UsersModule } from '@modules/users/users.module';
 import { HomeModule } from '@modules/home/home.module';
 import { TripsModule } from '@modules/trips/trips.module';
 import { UrlPingService } from '@shared/jobs/url-ping.service';
+import { TrackingModule } from './modules/tracking/tracking.module';
+import { RealTimeModule } from './modules/real-time/real-time.moule';
 
 @Module({
   imports: [
@@ -20,6 +23,27 @@ import { UrlPingService } from '@shared/jobs/url-ping.service';
         abortEarly: false,
       },
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+          password: configService.get<string>('REDIS_PASSWORD'),
+          ...(configService.get<string>('REDIS_HOST')?.includes('upstash') ? { tls: {} } : {}),
+        },
+        defaultJobOptions: {
+          removeOnComplete: true,
+          removeOnFail: 100,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+        },
+      }),
+    }),
     AppLoggerModule,
     PrismaModule,
     UsersModule,
@@ -27,7 +51,9 @@ import { UrlPingService } from '@shared/jobs/url-ping.service';
     HomeModule,
     TripsModule,
     HealthModule,
+    TrackingModule,
+    RealTimeModule,
   ],
   providers: [UrlPingService],
 })
-export class AppModule {}
+export class AppModule { }

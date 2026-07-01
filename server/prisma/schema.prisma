@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -26,31 +26,39 @@ model User {
 }
 
 model Trip {
-  id            String   @id @default(uuid())
-  boatName      String
-  boatType      String
-  price         Int
-  origin        String
-  destination   String
-  departureDate DateTime
-  departureTime String
+  id                String          @id @default(uuid())
+  boatName          String
+  boatType          String
+  price             Int
+  origin            String
+  destination       String
+  departureDate     DateTime
+  departureTime     String
   userDepartureDate DateTime?
   userDepartureTime String?
-  status        TripStatus @default(programado)
-  latitude      Float
-  longitude     Float
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  status            TripStatus      @default(programado)
+  
+  // Guardam apenas a ÚLTIMA posição calculada para consultas rápidas via HTTP GET
+  latitude          Float
+  longitude         Float
+  confidenceLevel   ConfidenceLevel @default(BAIXO) // Adicionado para refletir o infográfico
+  
+  createdAt         DateTime        @updatedAt
+  updatedAt         DateTime        @updatedAt
 
-  itineraries   Itinerary[]
-  accommodations Accommodation[]
+  itineraries       Itinerary[]
+  accommodations    Accommodation[]
+  
+  // Relacionamentos para telemetria (Novos)
+  rawLocations      RawLocation[]
+  boatLocations     BoatLocation[]
 
   @@index([origin, destination])
   @@index([departureDate])
 }
 
 model Itinerary {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   tripId      String
   name        String
   type        ItineraryType
@@ -58,10 +66,10 @@ model Itinerary {
   description String
   status      String?
   order       Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip        Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
   @@index([order])
@@ -81,6 +89,38 @@ model Accommodation {
   @@index([tripId])
 }
 
+model RawLocation {
+  id        String   @id @default(uuid())
+  tripId    String
+  deviceId  String   // Hash anônimo enviado pelo React Native para distinguir passageiros
+  latitude  Float
+  longitude Float
+  pingedAt  DateTime // Data/Hora exata em que o celular capturou o GPS (essencial para dados offline)
+  createdAt DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([pingedAt]) // Otimiza a query do Worker de buscar os últimos 5 minutos
+}
+
+model BoatLocation {
+  id              String          @id @default(uuid())
+  tripId          String
+  latitude        Float
+  longitude       Float
+  confidenceLevel ConfidenceLevel
+  calculatedAt    DateTime        @default(now())
+
+  trip            Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
 enum TripStatus {
   em_transito
   no_porto
@@ -91,4 +131,11 @@ enum ItineraryType {
   saida
   escala
   destino
+}
+
+// Novo Enum para o Nível de Confiança exibido na interface do usuário
+enum ConfidenceLevel {
+  ALTO
+  MEDIO
+  BAIXO
 }

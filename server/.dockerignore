@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.env
+.env.*
+Dockerfile
+.dockerignore
+npm-debug.log
+yarn-error.log
+test-boot.ts
+start.log
+check-queue.js
+add-job.js
+check-keys.js

@@ -6,6 +6,8 @@ O contrato detalhado, exemplos e schemas ficam no Swagger `/docs`.
 |---|---|---|---|
 | POST | `/auth/register` | Público | Cadastro e JWT |
 | POST | `/auth/login` | Público | Login e JWT |
+| POST | `/auth/forgot-password` | Público | Solicita link de recuperação |
+| POST | `/auth/reset-password` | Público | Redefine senha com token de uso único |
 | GET/PATCH/DELETE | `/users/me` | JWT | Perfil e exclusão |
 | PATCH | `/users/me/location-consent` | JWT | Consentimento GPS |
 | GET | `/users/me/export` | JWT | Exportação LGPD |
@@ -41,4 +43,3 @@ O contrato detalhado, exemplos e schemas ficam no Swagger `/docs`.
 | GET | `/admin/audit-logs` | ADMIN | Auditoria |
 | GET | `/tracking/metrics` | ADMIN | Métricas operacionais |
 | GET | `/health` | Público | Disponibilidade |
-

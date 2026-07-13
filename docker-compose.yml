@@ -16,6 +16,8 @@ services:
     image: redis:7-alpine
     container_name: navega-redis
     restart: unless-stopped
+    ports:
+      - "6379:6379"
     volumes:
       - navega-redis-data:/data
 
@@ -32,6 +34,9 @@ services:
       REDIS_PORT: 6379
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      PASSWORD_RESET_BASE_URL: ${PASSWORD_RESET_BASE_URL:-http://localhost:5173/reset-password}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
       PORT: 3000
     depends_on:
       - postgres

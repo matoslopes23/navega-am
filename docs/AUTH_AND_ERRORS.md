@@ -1,5 +1,26 @@
 # Autenticação e erros
 
+## Recuperação de senha
+
+1. Envie `{ "email": "usuario@email.com" }` para `POST /auth/forgot-password`.
+2. A API sempre responde com a mesma mensagem, exista ou não uma conta.
+3. Para contas existentes, é criado um token válido por 30 minutos; somente o
+   SHA-256 do token fica no banco.
+4. A tela recebe o token pelo link e envia `{ "token", "password" }` para
+   `POST /auth/reset-password`.
+5. O token perde a validade após o primeiro uso.
+
+Em desenvolvimento, o token também é retornado em `resetToken` e registrado no
+log. Isso não ocorre em teste ou produção.
+
+```env
+PASSWORD_RESET_BASE_URL=https://app.exemplo.com/reset-password
+RESEND_API_KEY=re_...
+EMAIL_FROM=Navega AM <nao-responda@dominio-verificado.com>
+```
+
+Sem as credenciais de e-mail, nenhum link é enviado.
+
 ## Cabeçalho
 
 ```http
@@ -31,4 +52,3 @@ Authorization: Bearer eyJ...
 
 Todas as requisições recebem ou preservam `x-request-id`. Inclua esse identificador
 ao reportar erros para facilitar rastreamento nos logs.
-

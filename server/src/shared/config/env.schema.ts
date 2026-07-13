@@ -13,9 +13,14 @@ export const envSchema = Joi.object({
   DATABASE_URL: Joi.string().required(),
   DIRECT_URL: Joi.string().default(Joi.ref('DATABASE_URL')),
   CORS_ORIGINS: Joi.string().default(
-    'http://localhost:8080,http://localhost:5173',
+    'http://localhost:8080,http://localhost:3003,http://localhost:5173',
   ),
   SWAGGER_ENABLED: Joi.boolean().default(true),
+  PASSWORD_RESET_BASE_URL: Joi.string()
+    .uri()
+    .default('http://localhost:5173/reset-password'),
+  RESEND_API_KEY: Joi.string().optional().allow(''),
+  EMAIL_FROM: Joi.string().optional().allow(''),
   PING_URL: Joi.string().uri().optional(),
   PING_INTERVAL_MS: Joi.number().min(5000).optional(),
 

@@ -22,4 +22,14 @@ export interface UserManagementRepository {
     actorId: string,
   ): Promise<unknown>;
   listAuditLogs(): Promise<unknown[]>;
+  createPasswordResetToken(
+    userId: string,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<void>;
+  resetPasswordWithToken(
+    tokenHash: string,
+    passwordHash: string,
+    now: Date,
+  ): Promise<boolean>;
 }

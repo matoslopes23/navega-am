@@ -6,6 +6,8 @@ import { LoginUserUseCase } from '@modules/auth/application/use-cases/login-user
 import { RegisterUserUseCase } from '@modules/auth/application/use-cases/register-user.usecase';
 import type { LoginUserDto } from '@modules/auth/presentation/dto/login-user.dto';
 import type { RegisterUserDto } from '@modules/auth/presentation/dto/register-user.dto';
+import { RequestPasswordResetUseCase } from '../application/use-cases/request-password-reset.usecase';
+import { ResetPasswordUseCase } from '../application/use-cases/reset-password.usecase';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -22,6 +24,14 @@ describe('AuthController', () => {
         },
         {
           provide: LoginUserUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: RequestPasswordResetUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: ResetPasswordUseCase,
           useValue: { execute: jest.fn() },
         },
       ],

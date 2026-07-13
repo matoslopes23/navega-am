@@ -32,7 +32,6 @@ async function bootstrap() {
         'API oficial do Navega AM para consulta de viagens, rastreamento colaborativo em tempo real, relatos, notificações e operação administrativa. Consulte também os guias em /docs na raiz do repositório.',
       )
       .setVersion('1.0.0')
-      .addServer('http://localhost:3000', 'Desenvolvimento local')
       .addBearerAuth({
         type: 'http',
         scheme: 'bearer',

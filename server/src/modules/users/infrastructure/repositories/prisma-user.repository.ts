@@ -153,4 +153,45 @@ export class PrismaUserRepository
       take: 100,
     });
   }
+
+  async createPasswordResetToken(
+    userId: string,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      this.prisma.passwordResetToken.create({
+        data: { userId, tokenHash, expiresAt },
+      }),
+    ]);
+  }
+
+  async resetPasswordWithToken(
+    tokenHash: string,
+    passwordHash: string,
+    now: Date,
+  ): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const token = await tx.passwordResetToken.findUnique({
+        where: { tokenHash },
+      });
+      if (!token || token.usedAt || token.expiresAt <= now) return false;
+
+      const consumed = await tx.passwordResetToken.updateMany({
+        where: { id: token.id, usedAt: null, expiresAt: { gt: now } },
+        data: { usedAt: now },
+      });
+      if (consumed.count !== 1) return false;
+
+      await tx.user.update({
+        where: { id: token.userId },
+        data: { passwordHash },
+      });
+      await tx.passwordResetToken.deleteMany({
+        where: { userId: token.userId, id: { not: token.id } },
+      });
+      return true;
+    });
+  }
 }

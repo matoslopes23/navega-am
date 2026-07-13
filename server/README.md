@@ -1,172 +1,419 @@
-# Navega API (Server)
+# Navega API
 
-Backend do projeto **Navega AM**, construído em **NestJS** com **Clean Architecture** e **CQRS**.
+Backend do ecossistema **Navega AM**, responsável por autenticação, consulta de
+viagens, acompanhamento colaborativo de embarcações, telemetria GPS, relatos,
+notificações e operações administrativas.
 
-## ✅ Requisitos
+A aplicação utiliza NestJS, PostgreSQL, Prisma e Redis. A primeira versão não
+inclui compra ou reserva de passagens: o foco é localizar viagens e acompanhar a
+embarcação em tempo real.
 
-- Node.js (LTS recomendado)
-- npm
+## Início rápido
 
-## ⚙️ Instalação
+Para executar somente a API em desenvolvimento:
 
 ```bash
+# Na raiz do monorepo
 npm install
+cp server/.env.example server/.env
+docker compose up -d postgres redis
+npm --workspace server run prisma:generate
+npm --workspace server run prisma:migrate
+npm --workspace server run start:dev
 ```
 
-> Se estiver usando o monorepo, rode o `npm install` na raiz.
+Com o valor padrão `PORT=3000`, acesse:
 
-## ▶️ Como rodar
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/docs`
+- OpenAPI JSON: `http://localhost:3000/docs-json`
+
+Se definir `PORT=3003`, os endereços passam a usar a porta `3003`. O Swagger
+utiliza automaticamente a mesma origem pela qual foi aberto.
+
+## Pré-requisitos
+
+- Node.js 22 ou uma versão LTS compatível.
+- npm com suporte a workspaces.
+- PostgreSQL 16 ou acesso a uma instância PostgreSQL.
+- Redis 7 ou um serviço compatível, como Upstash.
+- Docker e Docker Compose, caso prefira os serviços locais do projeto.
+
+## Estrutura do monorepo
+
+As dependências são instaladas na raiz, pois o projeto usa npm workspaces:
+
+```text
+navega-am/
+├── mobile/
+├── server/       # esta API
+├── web/
+├── docs/
+├── docker-compose.yml
+└── package.json
+```
+
+Também é possível executar comandos dentro de `server`, mas evite entrar duas
+vezes na pasta (`cd server` quando já estiver em `server`).
+
+## Configuração do ambiente
+
+Crie o arquivo de ambiente a partir do exemplo:
+
+```bash
+cp server/.env.example server/.env
+```
+
+Variáveis principais:
+
+| Variável | Obrigatória | Descrição |
+|---|---:|---|
+| `NODE_ENV` | Não | `development`, `test` ou `production` |
+| `PORT` | Não | Porta HTTP; padrão `3000` |
+| `DATABASE_URL` | Sim | Conexão usada pela aplicação/Prisma |
+| `DIRECT_URL` | Não | Conexão direta para migrations; usa `DATABASE_URL` por padrão |
+| `JWT_SECRET` | Sim | Segredo JWT; mínimo de 32 caracteres em produção |
+| `REDIS_HOST` | Sim | Host do Redis |
+| `REDIS_PORT` | Não | Porta do Redis; padrão `6379` |
+| `REDIS_PASSWORD` | Não | Senha do Redis/Upstash |
+| `CORS_ORIGINS` | Não | Origens permitidas, separadas por vírgula |
+| `SWAGGER_ENABLED` | Não | Habilita `/docs`; padrão `true` |
+| `PASSWORD_RESET_BASE_URL` | Não | Tela do frontend que receberá o token de recuperação |
+| `RESEND_API_KEY` | Produção | Chave para envio do e-mail de recuperação |
+| `EMAIL_FROM` | Produção | Remetente verificado no Resend |
+| `ADMIN_EMAIL` | Seed | E-mail do administrador inicial |
+| `ADMIN_PASSWORD` | Seed | Senha do administrador inicial |
+| `ADMIN_CPF` | Seed | CPF do administrador inicial |
+| `PING_URL` | Não | URL opcional para o job de keep-alive |
+| `PING_INTERVAL_MS` | Não | Intervalo mínimo de 5 segundos |
+
+Exemplo local:
+
+```env
+NODE_ENV=development
+PORT=3003
+DATABASE_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
+DIRECT_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
+JWT_SECRET="development-only-change-me"
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+REDIS_PASSWORD=""
+CORS_ORIGINS="http://localhost:8080,http://localhost:5173"
+SWAGGER_ENABLED=true
+PASSWORD_RESET_BASE_URL="http://localhost:5173/reset-password"
+```
+
+Nunca versione o arquivo `.env` nem use os segredos de desenvolvimento em
+produção.
+
+## Banco de dados e Redis
+
+Para iniciar apenas a infraestrutura local:
+
+```bash
+docker compose up -d postgres redis
+docker compose ps
+```
+
+Para encerrar os containers sem apagar os dados:
+
+```bash
+docker compose stop postgres redis
+```
+
+O volume do PostgreSQL mantém os dados entre reinicializações. Não use
+`docker compose down -v` se precisar preservar o banco.
+
+### Prisma
+
+Depois de configurar o banco:
+
+```bash
+# Gera o Prisma Client
+npm --workspace server run prisma:generate
+
+# Desenvolvimento: cria/aplica migrations a partir do schema
+npm --workspace server run prisma:migrate
+
+# Produção/homologação: aplica apenas migrations existentes
+cd server
+npx prisma migrate deploy
+```
+
+O comando correto para deploy é `prisma migrate deploy`, e não
+`prisma deploy`. Para consultar os dados localmente:
+
+```bash
+npm --workspace server run prisma:studio
+```
+
+### Dados iniciais e administrador
+
+O seed importa as viagens do CSV e cria o administrador quando as três variáveis
+`ADMIN_EMAIL`, `ADMIN_PASSWORD` e `ADMIN_CPF` estiverem preenchidas:
+
+```bash
+npm --workspace server run prisma:seed
+```
+
+O seed pode ser executado novamente: viagens já existentes são ignoradas e o
+papel do usuário configurado é atualizado para `ADMIN`.
+
+## Executando a aplicação
+
+Na raiz do monorepo:
+
+```bash
+npm run dev:server
+```
+
+Ou dentro de `server`:
 
 ```bash
 npm run start:dev
 ```
 
-Servidor padrão: `http://localhost:3000`
-
-## 📚 Documentação
-
-- Swagger: `http://localhost:3000/docs`
-- Arquitetura e padrões: `docs/ARCHITECTURE.md`
-
-## 🔐 Autenticação
-
-Endpoints principais:
-
-- `POST /auth/register`
-- `POST /auth/login`
-
-Envie o token como `Authorization: Bearer <token>`. Consultas de viagens são
-públicas; contribuições e tracking exigem autenticação; criação de viagens exige
-papel `ADMIN`. Para criar o primeiro administrador, configure `ADMIN_EMAIL`,
-`ADMIN_PASSWORD` e `ADMIN_CPF` e execute `npm run prisma:seed`.
-
-## 🚤 Viagens ativas e colaboração
-
-- `GET /trips/active` — viagens em trânsito, posição, confiança e métricas.
-- `GET /trips/:id` — detalhes com o objeto `tracking` e estado `live`.
-- `POST /trips/:id/tracking/start` — inicia o compartilhamento.
-- `POST /trips/:id/tracking/heartbeat` — mantém a sessão ativa.
-- `POST /trips/:id/tracking/stop` — encerra o compartilhamento.
-- `GET /trips/:id/tracking/status` — confiança, colaboradores e recência.
-- `POST /tracking/sync` — sincroniza até 100 pontos GPS; requer sessão ativa.
-- `POST /trips/:id/reports` — relata atraso, parada, problema ou segurança.
-- `POST /trips/:id/reports/manual-position` — envia posição para moderação.
-- `GET /trips/:id/reports/summary` — resumo das últimas seis horas.
-- `PATCH /trips/:id/status` — transição operacional, exclusiva de `ADMIN`.
-
-Uma posição é considerada `live` quando foi calculada nos últimos dois minutos.
-O cliente deve enviar heartbeat durante o compartilhamento. Sessões sem heartbeat
-expiram automaticamente. Progresso, distância e ETA são retornados somente quando
-a viagem possui `destinationLatitude` e `destinationLongitude`.
-
-## 🔔 Alertas e notificações
-
-- `POST /users/me/devices` — registra token Expo/FCM.
-- `POST|DELETE /trips/:id/subscriptions` — ativa ou desativa alertas.
-- `GET /users/me/subscriptions` — viagens acompanhadas pelo usuário.
-- `GET /users/me/notifications` — caixa de notificações paginada.
-- `PATCH /users/me/notifications/:id/read` — marca como lida.
-
-As notificações são persistidas como outbox com `sentAt = null`. Um adaptador Expo/FCM
-pode consumir essa fila sem acoplar credenciais externas ao domínio.
-
-## 🗺️ Rotas, histórico e operação
-
-- `GET /trips/:id/location-history` — histórico público com precisão reduzida.
-- `GET /trips/:id/timeline` — eventos operacionais da viagem.
-- `GET|POST /operations/ports` — portos e raios de geofencing (`ADMIN`).
-- `GET|POST /operations/routes` — geometrias GeoJSON (`ADMIN`).
-- `PATCH /operations/trips/:id/route` — associa uma rota à viagem (`ADMIN`).
-- `GET /tracking/metrics` — indicadores operacionais (`ADMIN`).
-
-O backend expira colaboradores e estados `live` a cada minuto, registra aproximação
-de portos, rejeita GPS com baixa precisão/velocidade impossível e remove posições
-brutas após 30 dias.
-
-## 👤 Perfil e privacidade
-
-- `GET|PATCH|DELETE /users/me` — consulta, atualização e exclusão da conta.
-- `PATCH /users/me/location-consent` — concede ou revoga consentimento.
-- `GET /users/me/export` — exporta os dados pessoais e contribuições.
-
-O compartilhamento GPS só pode começar depois do consentimento explícito.
-
-## �️ Banco de dados (Postgres + Prisma)
-
-Este backend usa **Prisma** como ORM e **PostgreSQL**.
-
-### Subir o Postgres (Docker)
-
-Na raiz do monorepo:
+Outros modos:
 
 ```bash
-docker compose up -d
+npm run build
+npm run start:prod
 ```
 
-### Variáveis de ambiente
+O modo de produção pressupõe que `dist/` já foi gerado. O Dockerfile aplica
+`prisma migrate deploy` antes de iniciar a API.
 
-Configure as variáveis (veja `.env.example`):
+## Swagger e autenticação
 
+O Swagger contém schemas, exemplos, parâmetros, respostas e indicação de acesso.
+Para testar uma rota autenticada:
+
+1. Execute `POST /auth/register` ou `POST /auth/login`.
+2. Copie o `accessToken` retornado.
+3. Clique em **Authorize** no Swagger.
+4. Informe somente o token; o Swagger adiciona `Bearer` automaticamente.
+
+Em clientes HTTP, envie:
+
+```http
+Authorization: Bearer <accessToken>
 ```
-DATABASE_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
-DIRECT_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
-REDIS_HOST="localhost"
-REDIS_PORT=6379
-JWT_SECRET="use-ao-menos-32-caracteres-em-producao"
+
+Os acessos utilizados na tabela abaixo são:
+
+- **Público**: não exige autenticação.
+- **JWT**: exige usuário autenticado.
+- **ADMIN**: exige JWT com papel `ADMIN`.
+
+## Rotas da API
+
+### Sistema e saúde
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `GET` | `/` | Público | Identifica o serviço |
+| `GET` | `/health` | Público | Verifica disponibilidade básica |
+| `GET` | `/health/echo` | Público | Testa parâmetros da API |
+| `GET` | `/health/metrics` | Público | Métricas de runtime |
+| `GET` | `/home` | Público | Dados consolidados da tela inicial |
+
+### Autenticação e recuperação de senha
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `POST` | `/auth/register` | Público | Cadastra usuário e retorna JWT |
+| `POST` | `/auth/login` | Público | Autentica por e-mail ou telefone |
+| `POST` | `/auth/forgot-password` | Público | Solicita link de recuperação |
+| `POST` | `/auth/reset-password` | Público | Redefine senha com token de uso único |
+
+O endpoint de solicitação sempre retorna a mesma mensagem para não revelar se a
+conta existe. O token expira em 30 minutos, é armazenado apenas como hash e perde
+a validade depois do primeiro uso. Em desenvolvimento, `resetToken` também é
+retornado para facilitar testes; isso não ocorre em produção.
+
+### Perfil e privacidade
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `GET` | `/users/me` | JWT | Consulta o perfil |
+| `PATCH` | `/users/me` | JWT | Atualiza nome e telefone |
+| `DELETE` | `/users/me` | JWT | Exclui a conta |
+| `PATCH` | `/users/me/location-consent` | JWT | Concede ou revoga consentimento GPS |
+| `GET` | `/users/me/export` | JWT | Exporta dados pessoais e contribuições |
+| `POST` | `/users/me/change-password` | JWT | Altera senha informando a senha atual |
+
+O tracking só pode ser iniciado após consentimento explícito de localização.
+
+### Viagens
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `GET` | `/trips/locations` | Público | Lista origens e destinos disponíveis |
+| `GET` | `/trips/search` | Público | Busca viagens com filtros e paginação |
+| `GET` | `/trips/active` | Público | Lista viagens em trânsito/LIVE |
+| `GET` | `/trips/:id` | Público | Detalhes, itinerário e tracking |
+| `POST` | `/trips` | ADMIN | Cadastra uma viagem |
+| `PATCH` | `/trips/:id/contribution` | JWT | Informa horário observado pelo usuário |
+| `PATCH` | `/trips/:id/status` | ADMIN | Executa transição operacional de status |
+| `GET` | `/trips/:id/location-history` | Público | Histórico com precisão reduzida |
+| `GET` | `/trips/:id/timeline` | Público | Timeline operacional da viagem |
+
+### Tracking colaborativo
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `POST` | `/trips/:tripId/tracking/start` | JWT | Inicia colaboração na viagem |
+| `POST` | `/trips/:tripId/tracking/heartbeat` | JWT | Mantém a sessão ativa |
+| `POST` | `/trips/:tripId/tracking/stop` | JWT | Encerra colaboração |
+| `GET` | `/trips/:tripId/tracking/status` | JWT | Retorna LIVE, confiança e colaboradores |
+| `POST` | `/tracking/sync` | JWT | Sincroniza lote de até 100 pontos GPS |
+| `GET` | `/tracking/metrics` | ADMIN | Métricas operacionais do tracking |
+
+Uma posição é considerada LIVE quando foi calculada nos últimos dois minutos. O
+aplicativo deve enviar heartbeat durante o compartilhamento. Pontos capturados
+offline podem ser sincronizados posteriormente preservando `pingedAt`.
+
+### Relatos colaborativos
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `POST` | `/trips/:tripId/reports` | JWT | Relata atraso, parada ou problema |
+| `POST` | `/trips/:tripId/reports/manual-position` | JWT | Envia posição manual para moderação |
+| `GET` | `/trips/:tripId/reports/summary` | JWT | Resumo recente dos relatos |
+| `PATCH` | `/trips/:tripId/reports/:reportId/moderate` | ADMIN | Confirma ou rejeita relato |
+
+### Notificações
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `POST` | `/users/me/devices` | JWT | Registra token Expo, FCM ou APNs |
+| `POST` | `/trips/:tripId/subscriptions` | JWT | Ativa alertas da viagem |
+| `DELETE` | `/trips/:tripId/subscriptions` | JWT | Desativa alertas da viagem |
+| `GET` | `/users/me/subscriptions` | JWT | Lista viagens acompanhadas |
+| `GET` | `/users/me/notifications` | JWT | Lista notificações paginadas |
+| `PATCH` | `/users/me/notifications/:id/read` | JWT | Marca notificação como lida |
+
+### Administração e operação
+
+| Método | Rota | Acesso | Finalidade |
+|---|---|---|---|
+| `GET` | `/operations/ports` | ADMIN | Lista portos e áreas de geofencing |
+| `POST` | `/operations/ports` | ADMIN | Cadastra porto |
+| `GET` | `/operations/routes` | ADMIN | Lista rotas fluviais GeoJSON |
+| `POST` | `/operations/routes` | ADMIN | Cadastra rota fluvial |
+| `PATCH` | `/operations/trips/:tripId/route` | ADMIN | Associa rota a uma viagem |
+| `GET` | `/admin/users` | ADMIN | Lista usuários |
+| `PATCH` | `/admin/users/:id/role` | ADMIN | Altera papel e registra auditoria |
+| `GET` | `/admin/audit-logs` | ADMIN | Lista registros de auditoria |
+
+## WebSocket
+
+O Socket.IO utiliza o namespace `/trips`. Envie o JWT no handshake:
+
+```ts
+io('http://localhost:3003/trips', {
+  auth: { token: accessToken },
+});
 ```
 
-### Prisma
+Eventos principais:
+
+- `join_trip`: entra na sala de uma viagem.
+- `leave_trip`: sai da sala.
+- `boat_position_updated`: recebe a nova posição consolidada.
+
+O contrato completo está em [`../docs/WEBSOCKET.md`](../docs/WEBSOCKET.md).
+
+## Scripts disponíveis
+
+Execute dentro de `server` ou adapte com `npm --workspace server run ...`:
+
+| Script | Uso |
+|---|---|
+| `npm run start:dev` | Desenvolvimento com watch |
+| `npm run build` | Compila para `dist/` |
+| `npm run start:prod` | Executa o build |
+| `npm run lint` | Corrige/verifica lint |
+| `npm run test` | Testes unitários |
+| `npm run test:watch` | Testes em watch |
+| `npm run test:cov` | Cobertura |
+| `npm run test:e2e` | Testes end-to-end |
+| `npm run prisma:generate` | Gera Prisma Client |
+| `npm run prisma:migrate` | Cria/aplica migration de desenvolvimento |
+| `npm run prisma:seed` | Importa dados e cria admin opcional |
+| `npm run prisma:studio` | Abre Prisma Studio |
+
+Validação completa recomendada antes de enviar alterações:
 
 ```bash
-npm run prisma:generate
-npm run prisma:migrate
-npm run prisma:studio
+npx eslint "{src,test}/**/*.ts"
+npx tsc --noEmit
+npm run build
+npm test -- --runInBand
 ```
 
-## �🔧 Scripts úteis
+## Arquitetura
+
+O fluxo esperado é:
+
+```text
+Controller → Use case → Repository port → Prisma repository
+```
+
+- Controllers tratam HTTP, guards e DTOs.
+- Casos de uso concentram regras e orquestração.
+- Ports definem os contratos da aplicação.
+- Repositories Prisma ficam na infraestrutura.
+- DTOs são arquivos próprios em `presentation/dto`.
+
+Consulte [`../docs/BACKEND_ARCHITECTURE.md`](../docs/BACKEND_ARCHITECTURE.md)
+antes de criar novos módulos.
+
+## Solução de problemas
+
+### Swagger aberto em uma porta e chamando outra
+
+Abra `/docs` na mesma origem da API e reinicie o servidor após alterar `PORT`.
+Sem um `server` fixo no OpenAPI, o Swagger utiliza a origem atual.
+
+### `UnknownDependenciesException`
+
+Confirme se o provider está em `providers`, se o módulo o exporta e se o módulo
+consumidor importa o módulo que fornece o token.
+
+### `P1001: Can't reach database server`
+
+Verifique `DATABASE_URL`, host, porta, rede e se o PostgreSQL está ativo. Em
+Supabase, confirme também projeto, usuário, senha e modo correto do pooler.
+
+### `tenant/user ... not found`
+
+As credenciais ou o identificador do projeto Supabase estão incorretos ou
+desatualizados. Copie novamente as connection strings do painel do projeto.
+
+### Redis `EAI_AGAIN`, `ECONNREFUSED` ou timeout
+
+Verifique `REDIS_HOST`, `REDIS_PORT`, senha e conectividade. Para desenvolvimento
+local, execute `docker compose up -d redis` e use `REDIS_HOST=localhost`.
+
+### `@prisma/cli-deploy` retorna 404
+
+Foi executado `prisma deploy`, que não é o comando de migrations. Use:
 
 ```bash
-npm run start      # modo normal
-npm run start:dev  # desenvolvimento
-npm run start:prod # produção
-npm run lint       # lint
-npm run test       # testes unitários
-npm run test:e2e   # testes e2e
-npm run build      # build
+npx prisma migrate deploy
 ```
 
-## 🧱 Estrutura (resumo)
+### O Prisma Client não reconhece um model novo
 
-```
-src/
-  modules/
-    <feature>/
-      domain/
-      application/
-      infrastructure/
-      presentation/
-  shared/
-```
+Execute `npm run prisma:generate` e reinicie o TypeScript Server do editor.
 
-## 🧩 Como criar um novo módulo
+## Documentação complementar
 
-1. Crie `src/modules/<feature>/` com as pastas de camadas.
-2. Defina entidades e contratos no `domain`.
-3. Crie os **use cases** em `application/use-cases`.
-4. Separe **queries/commands** (CQRS).
-5. Implemente repositórios em `infrastructure`.
-6. Exponha endpoints em `presentation`.
-7. Registre providers no `<feature>.module.ts`.
-8. Importe o módulo no `AppModule`.
-
-> Veja o exemplo completo em `src/modules/health`.
-
-## ✅ Boas práticas aplicadas
-
-- Clean Architecture (camadas isoladas)
-- CQRS (commands/queries)
-- Repository + Mapper
-- DTO validation (ValidationPipe)
-- Logger estruturado (pino)
-- ConfigModule com validação de env
-- Swagger em `/docs`
+- [`../docs/README.md`](../docs/README.md): índice geral.
+- [`../docs/FRONTEND_INTEGRATION.md`](../docs/FRONTEND_INTEGRATION.md): fluxo do frontend.
+- [`../docs/API_REFERENCE.md`](../docs/API_REFERENCE.md): referência resumida.
+- [`../docs/TRACKING.md`](../docs/TRACKING.md): tracking e funcionamento offline.
+- [`../docs/WEBSOCKET.md`](../docs/WEBSOCKET.md): eventos em tempo real.
+- [`../docs/BUSINESS_RULES.md`](../docs/BUSINESS_RULES.md): estados e regras.
+- [`../docs/AUTH_AND_ERRORS.md`](../docs/AUTH_AND_ERRORS.md): JWT, recuperação e erros.

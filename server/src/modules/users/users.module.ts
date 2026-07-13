@@ -26,6 +26,6 @@ import { ManageUsersAdminUseCase } from './application/use-cases/manage-users-ad
       useClass: PrismaUserRepository,
     },
   ],
-  exports: [USER_REPOSITORY],
+  exports: [USER_REPOSITORY, USER_MANAGEMENT_REPOSITORY],
 })
 export class UsersModule {}

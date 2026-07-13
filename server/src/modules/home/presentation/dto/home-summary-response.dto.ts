@@ -15,9 +15,9 @@ export class HomeDepartureResponseDto {
 
   @ApiProperty({
     example: 'no-porto',
-    enum: ['no-porto', 'embarcando', 'programado'],
+    enum: ['no-porto', 'em-transito', 'programado'],
   })
-  status!: 'no-porto' | 'embarcando' | 'programado';
+  status!: 'no-porto' | 'em-transito' | 'programado';
 
   @ApiProperty({ example: 'R$ 150' })
   price!: string;
@@ -27,6 +27,12 @@ export class HomeDepartureResponseDto {
 
   @ApiProperty({ example: '#0B5FD5' })
   iconColor!: string;
+
+  @ApiProperty({ example: true, required: false })
+  live?: boolean;
+
+  @ApiProperty({ example: 18, required: false })
+  contributorCount?: number;
 }
 
 export class HomeBannerResponseDto {

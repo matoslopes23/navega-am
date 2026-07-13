@@ -29,6 +29,10 @@ export class ProcessGpsBatchUseCase {
         latitude: loc.latitude,
         longitude: loc.longitude,
         pingedAt: new Date(loc.pingedAt),
+        clientPointId: loc.clientPointId,
+        accuracy: loc.accuracy,
+        speed: loc.speed,
+        heading: loc.heading,
       }));
       await this.repository.saveRawLocations(rawData);
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -51,6 +55,80 @@ export class ProcessGpsBatchUseCase {
         recentLocations.map((location) => location.longitude),
       );
 
+      const context = await this.repository.getTripTrackingContext(tripId);
+      const toRadians = (value: number) => (value * Math.PI) / 180;
+      const distanceKm = (
+        fromLat: number,
+        fromLng: number,
+        toLat: number,
+        toLng: number,
+      ) => {
+        const earthRadiusKm = 6371;
+        const deltaLat = toRadians(toLat - fromLat);
+        const deltaLng = toRadians(toLng - fromLng);
+        const a =
+          Math.sin(deltaLat / 2) ** 2 +
+          Math.cos(toRadians(fromLat)) *
+            Math.cos(toRadians(toLat)) *
+            Math.sin(deltaLng / 2) ** 2;
+        return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+
+      const reportedSpeeds = locations
+        .map((location) => location.speed)
+        .filter((speed): speed is number => speed !== undefined);
+      let speedKmh = reportedSpeeds.length
+        ? median(reportedSpeeds) * 3.6
+        : undefined;
+      if (!speedKmh && context?.lastLocation) {
+        const elapsedHours =
+          (Date.now() - context.lastLocation.calculatedAt.getTime()) /
+          3_600_000;
+        if (elapsedHours > 0) {
+          speedKmh =
+            distanceKm(
+              context.lastLocation.latitude,
+              context.lastLocation.longitude,
+              latitude,
+              longitude,
+            ) / elapsedHours;
+        }
+      }
+
+      let progressPercent: number | undefined;
+      let remainingDistanceKm: number | undefined;
+      let estimatedArrival: Date | undefined;
+      if (
+        context?.originLatitude != null &&
+        context.originLongitude != null &&
+        context.destinationLatitude != null &&
+        context.destinationLongitude != null
+      ) {
+        const totalDistance = distanceKm(
+          context.originLatitude,
+          context.originLongitude,
+          context.destinationLatitude,
+          context.destinationLongitude,
+        );
+        remainingDistanceKm = distanceKm(
+          latitude,
+          longitude,
+          context.destinationLatitude,
+          context.destinationLongitude,
+        );
+        if (totalDistance > 0) {
+          progressPercent = Math.max(
+            0,
+            Math.min(100, (1 - remainingDistanceKm / totalDistance) * 100),
+          );
+        }
+        if (speedKmh && speedKmh >= 1) {
+          estimatedArrival = new Date(
+            Date.now() + (remainingDistanceKm / speedKmh) * 3_600_000,
+          );
+        }
+      }
+
       let confidenceLevel: ConfidenceLevel = 'BAIXO';
       if (recentLocations.length >= 10) confidenceLevel = 'ALTO';
       else if (recentLocations.length >= 3) confidenceLevel = 'MEDIO';
@@ -60,6 +138,11 @@ export class ProcessGpsBatchUseCase {
         longitude,
         confidenceLevel,
         calculatedAt: new Date(),
+        contributorCount: recentLocations.length,
+        speedKmh,
+        progressPercent,
+        remainingDistanceKm,
+        estimatedArrival,
       };
 
       await this.repository.saveBoatLocationAndUpdateTrip(boatLocationData);

@@ -51,9 +51,24 @@ export class TripDetailsResponseDto {
 
   @ApiProperty({
     example: 'em-transito',
-    enum: ['em-transito', 'no-porto', 'programado'],
+    enum: [
+      'em-transito',
+      'no-porto',
+      'programado',
+      'embarcando',
+      'concluido',
+      'cancelado',
+      'atrasado',
+    ],
   })
-  status!: 'em-transito' | 'no-porto' | 'programado';
+  status!:
+    | 'em-transito'
+    | 'no-porto'
+    | 'programado'
+    | 'embarcando'
+    | 'concluido'
+    | 'cancelado'
+    | 'atrasado';
 
   @ApiProperty({ example: 'EM TRÂNSITO' })
   statusLabel!: string;
@@ -78,4 +93,29 @@ export class TripDetailsResponseDto {
 
   @ApiProperty({ example: false })
   notificationsEnabled!: boolean;
+
+  @ApiProperty({
+    example: {
+      available: true,
+      live: true,
+      lastPositionAt: '2026-07-13T14:00:00.000Z',
+      contributorCount: 18,
+      confidenceLevel: 'ALTO',
+      speedKmh: 24,
+      progressPercent: 62,
+      remainingDistanceKm: 135,
+      estimatedArrival: '2026-07-13T16:30:00.000Z',
+    },
+  })
+  tracking!: {
+    available: boolean;
+    live: boolean;
+    lastPositionAt: string | null;
+    contributorCount: number;
+    confidenceLevel: 'ALTO' | 'MEDIO' | 'BAIXO';
+    speedKmh: number | null;
+    progressPercent: number | null;
+    remainingDistanceKm: number | null;
+    estimatedArrival: string | null;
+  };
 }

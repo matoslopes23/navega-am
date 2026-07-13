@@ -22,7 +22,14 @@ export type TripAccommodation = {
 export type TripDetails = {
   id: string;
   name: string;
-  status: 'em-transito' | 'no-porto' | 'programado';
+  status:
+    | 'em-transito'
+    | 'no-porto'
+    | 'programado'
+    | 'embarcando'
+    | 'concluido'
+    | 'cancelado'
+    | 'atrasado';
   statusLabel: string;
   userDepartureDate?: string;
   userDepartureTime?: string;
@@ -31,4 +38,15 @@ export type TripDetails = {
   accommodationsStatus: 'disponivel' | 'esgotado';
   accommodations: TripAccommodation[];
   notificationsEnabled: boolean;
+  tracking: {
+    available: boolean;
+    live: boolean;
+    lastPositionAt: string | null;
+    contributorCount: number;
+    confidenceLevel: 'ALTO' | 'MEDIO' | 'BAIXO';
+    speedKmh: number | null;
+    progressPercent: number | null;
+    remainingDistanceKm: number | null;
+    estimatedArrival: string | null;
+  };
 };

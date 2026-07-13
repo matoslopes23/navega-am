@@ -12,7 +12,7 @@ export class PrismaTrackingRepository implements TrackingRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async saveRawLocations(data: RawLocationInput[]): Promise<void> {
-    await this.prisma.rawLocation.createMany({ data });
+    await this.prisma.rawLocation.createMany({ data, skipDuplicates: true });
   }
 
   async getRecentUniqueLocations(
@@ -45,16 +45,59 @@ export class PrismaTrackingRepository implements TrackingRepositoryPort {
           longitude: data.longitude,
           confidenceLevel: data.confidenceLevel,
           calculatedAt: data.calculatedAt,
+          contributorCount: data.contributorCount,
+          speedKmh: data.speedKmh,
+          progressPercent: data.progressPercent,
+          remainingDistanceKm: data.remainingDistanceKm,
+          estimatedArrival: data.estimatedArrival,
         },
       }),
-      this.prisma.trip.update({
-        where: { id: data.tripId },
+      this.prisma.trip.updateMany({
+        where: {
+          id: data.tripId,
+          status: {
+            in: [
+              'programado',
+              'no_porto',
+              'embarcando',
+              'atrasado',
+              'em_transito',
+            ],
+          },
+        },
         data: {
           latitude: data.latitude,
           longitude: data.longitude,
           confidenceLevel: data.confidenceLevel,
+          lastPositionAt: data.calculatedAt,
+          status: 'em_transito',
         },
       }),
     ]);
+  }
+
+  async getTripTrackingContext(tripId: string) {
+    const trip = await this.prisma.trip.findUnique({
+      where: { id: tripId },
+      select: {
+        originLatitude: true,
+        originLongitude: true,
+        destinationLatitude: true,
+        destinationLongitude: true,
+        boatLocations: {
+          orderBy: { calculatedAt: 'desc' },
+          take: 1,
+          select: { latitude: true, longitude: true, calculatedAt: true },
+        },
+      },
+    });
+    if (!trip) return null;
+    return {
+      originLatitude: trip.originLatitude,
+      originLongitude: trip.originLongitude,
+      destinationLatitude: trip.destinationLatitude,
+      destinationLongitude: trip.destinationLongitude,
+      lastLocation: trip.boatLocations[0] ?? null,
+    };
   }
 }

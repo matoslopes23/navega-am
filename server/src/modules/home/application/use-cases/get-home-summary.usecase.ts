@@ -1,44 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { HomeSummary } from '@modules/home/domain/home-summary';
+import { ListActiveTripsUseCase } from '@modules/trips/application/use-cases/list-active-trips.usecase';
 
 @Injectable()
 export class GetHomeSummaryUseCase {
-  execute(): HomeSummary {
+  constructor(private readonly listActiveTrips: ListActiveTripsUseCase) {}
+
+  async execute(): Promise<HomeSummary> {
+    const activeTrips = await this.listActiveTrips.execute();
     return {
       greeting: 'Olá, viajante!',
       subtitle: 'Para onde vamos navegar hoje?',
-      departures: [
-        {
-          id: '1',
-          name: 'Comandante Souza',
-          subtitle: 'Lancha • Expresso',
-          time: '18:00',
-          status: 'no-porto',
-          price: 'R$ 150',
-          iconName: 'directions-boat',
-          iconColor: '#0B5FD5',
-        },
-        {
-          id: '2',
-          name: 'N/M Ana Karoline',
-          subtitle: 'Recreio • Regional',
-          time: '19:30',
-          status: 'embarcando',
-          price: 'R$ 80',
-          iconName: 'directions-ferry',
-          iconColor: '#F59E0B',
-        },
-        {
-          id: '3',
-          name: 'Iate Princesa',
-          subtitle: 'Catamarã • VIP',
-          time: '06:00 (Amanhã)',
-          status: 'programado',
-          price: 'R$ 220',
-          iconName: 'sailing',
-          iconColor: '#2563EB',
-        },
-      ],
+      departures: activeTrips.map((trip) => ({
+        id: trip.id,
+        name: trip.boatName,
+        subtitle: `${trip.origin} → ${trip.destination}`,
+        time: trip.departureTime,
+        status: 'em-transito',
+        price: trip.price,
+        iconName: 'directions-boat',
+        iconColor: '#0B5FD5',
+        live: trip.live,
+        contributorCount: trip.contributorCount,
+      })),
       banner: {
         title: 'Curiosidade',
         subtitle: 'Descubra as rotas pelo Rio Negro',

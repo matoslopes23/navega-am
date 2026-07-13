@@ -16,6 +16,10 @@ import { PrismaTrackingQueryRepository } from './infrastructure/repositores/pris
 import { RealTimeModule } from '../real-time/real-time.moule';
 import { AuthModule } from '../auth/auth.module';
 import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
+import { TrackingParticipationController } from './presentation/tracking-participation.controller';
+import { TripReportController } from './presentation/trip-report.controller';
+import { TrackingParticipationService } from './application/services/tracking-participation.service';
+import { TripReportService } from './application/services/trip-report.service';
 
 @Module({
   imports: [
@@ -26,13 +30,19 @@ import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
     AuthModule,
     PrismaModule, // Injeta o PrismaService global
   ],
-  controllers: [TrackingController],
+  controllers: [
+    TrackingController,
+    TrackingParticipationController,
+    TripReportController,
+  ],
   providers: [
     // Use Cases
     SyncGpsBatchUseCase,
     ProcessGpsBatchUseCase,
     GetLastBoatLocationUseCase,
     RateLimitGuard,
+    TrackingParticipationService,
+    TripReportService,
 
     // Workers / Processors
     TrackingProcessor,

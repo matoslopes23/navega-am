@@ -24,6 +24,9 @@ model User {
   role         UserRole @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  trackingParticipations TrackingParticipant[]
+  tripReports            TripReport[]
 }
 
 model Trip {
@@ -42,6 +45,11 @@ model Trip {
   // Guardam apenas a ÚLTIMA posição calculada para consultas rápidas via HTTP GET
   latitude          Float
   longitude         Float
+  lastPositionAt    DateTime?
+  originLatitude    Float?
+  originLongitude   Float?
+  destinationLatitude  Float?
+  destinationLongitude Float?
   confidenceLevel   ConfidenceLevel @default(BAIXO) // Adicionado para refletir o infográfico
   
   createdAt         DateTime        @default(now())
@@ -53,6 +61,8 @@ model Trip {
   // Relacionamentos para telemetria (Novos)
   rawLocations      RawLocation[]
   boatLocations     BoatLocation[]
+  trackingParticipants TrackingParticipant[]
+  reports           TripReport[]
 
   @@index([origin, destination])
   @@index([departureDate])
@@ -97,12 +107,17 @@ model RawLocation {
   latitude  Float
   longitude Float
   pingedAt  DateTime // Data/Hora exata em que o celular capturou o GPS (essencial para dados offline)
+  clientPointId String?
+  accuracy      Float?
+  speed         Float?
+  heading       Float?
   createdAt DateTime @default(now())
 
   trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
   @@index([pingedAt]) // Otimiza a query do Worker de buscar os últimos 5 minutos
+  @@unique([tripId, deviceId, clientPointId])
 }
 
 model BoatLocation {
@@ -112,10 +127,49 @@ model BoatLocation {
   longitude       Float
   confidenceLevel ConfidenceLevel
   calculatedAt    DateTime        @default(now())
+  contributorCount Int            @default(1)
+  speedKmh         Float?
+  progressPercent  Float?
+  remainingDistanceKm Float?
+  estimatedArrival DateTime?
 
   trip            Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
+}
+
+model TrackingParticipant {
+  id         String   @id @default(uuid())
+  tripId     String
+  userId     String
+  active     Boolean  @default(true)
+  startedAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  stoppedAt  DateTime?
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@index([tripId, active, lastSeenAt])
+}
+
+model TripReport {
+  id          String           @id @default(uuid())
+  tripId      String
+  userId      String
+  type        TripReportType
+  description String?
+  latitude    Float?
+  longitude   Float?
+  status      TripReportStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, status, createdAt])
 }
 
 // ==========================================
@@ -126,6 +180,10 @@ enum TripStatus {
   em_transito
   no_porto
   programado
+  embarcando
+  concluido
+  cancelado
+  atrasado
 }
 
 enum ItineraryType {
@@ -144,4 +202,19 @@ enum ConfidenceLevel {
 enum UserRole {
   USER
   ADMIN
+}
+
+enum TripReportType {
+  DELAY
+  STOPPED
+  BREAKDOWN
+  SAFETY
+  MANUAL_POSITION
+  OTHER
+}
+
+enum TripReportStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
 }

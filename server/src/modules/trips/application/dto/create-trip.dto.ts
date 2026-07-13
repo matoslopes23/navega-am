@@ -125,6 +125,16 @@ export class CreateTripDto {
   @IsLongitude()
   longitude!: number;
 
+  @ApiPropertyOptional({ example: -3.3836 })
+  @IsOptional()
+  @IsLatitude()
+  destinationLatitude?: number;
+
+  @ApiPropertyOptional({ example: -57.7186 })
+  @IsOptional()
+  @IsLongitude()
+  destinationLongitude?: number;
+
   @ApiPropertyOptional({ type: CreateTripItineraryDto, isArray: true })
   @IsOptional()
   @IsArray()

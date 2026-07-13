@@ -14,6 +14,8 @@ export type CreateTripInput = {
   status?: 'em-transito' | 'no-porto' | 'programado';
   latitude: number;
   longitude: number;
+  destinationLatitude?: number;
+  destinationLongitude?: number;
   itinerary?: {
     name: string;
     type: 'saida' | 'escala' | 'destino';
@@ -50,6 +52,10 @@ export class CreateTripUseCase {
       status: input.status,
       latitude: input.latitude,
       longitude: input.longitude,
+      originLatitude: input.latitude,
+      originLongitude: input.longitude,
+      destinationLatitude: input.destinationLatitude,
+      destinationLongitude: input.destinationLongitude,
       itinerary: input.itinerary,
       accommodations: input.accommodations,
     });

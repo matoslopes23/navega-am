@@ -12,26 +12,29 @@ export class PrismaTrackingQueryRepository implements TrackingQueryRepositoryPor
   async getLastKnownLocation(
     tripId: string,
   ): Promise<LastKnownLocation | null> {
-    const trip = await this.prisma.trip.findUnique({
-      where: { id: tripId },
+    const location = await this.prisma.boatLocation.findFirst({
+      where: { tripId },
+      orderBy: { calculatedAt: 'desc' },
       select: {
         latitude: true,
         longitude: true,
         confidenceLevel: true,
-        updatedAt: true, // Usamos a data de atualização da viagem como referência
+        calculatedAt: true,
+        contributorCount: true,
+        speedKmh: true,
+        progressPercent: true,
+        remainingDistanceKm: true,
+        estimatedArrival: true,
       },
     });
 
     // Se a viagem não existir ou se o barco ainda não tiver enviado nenhuma coordenada
-    if (!trip || trip.latitude === null || trip.longitude === null) {
+    if (!location) {
       return null;
     }
 
     return {
-      latitude: trip.latitude,
-      longitude: trip.longitude,
-      confidenceLevel: trip.confidenceLevel,
-      calculatedAt: trip.updatedAt,
+      ...location,
     };
   }
 }

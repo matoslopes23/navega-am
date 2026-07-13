@@ -11,6 +11,8 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '@modules/auth/presentation/guards/roles.guard';
 import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
 import { JwtService } from '@nestjs/jwt';
+import { ListActiveTripsUseCase } from '../application/use-cases/list-active-trips.usecase';
+import { UpdateTripStatusUseCase } from '../application/use-cases/update-trip-status.usecase';
 
 describe('TripsController', () => {
   let controller: TripsController;
@@ -70,6 +72,8 @@ describe('TripsController', () => {
           provide: CreateTripUseCase,
           useValue: createTripUseCaseMock,
         },
+        { provide: ListActiveTripsUseCase, useValue: { execute: jest.fn() } },
+        { provide: UpdateTripStatusUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 

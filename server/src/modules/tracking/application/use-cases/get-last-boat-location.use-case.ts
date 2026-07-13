@@ -22,6 +22,12 @@ export class GetLastBoatLocationUseCase {
       confidenceLevel: location.confidenceLevel,
       // Retornamos como string ISO para facilitar a leitura no frontend (React Native)
       calculatedAt: location.calculatedAt.toISOString(),
+      contributorCount: location.contributorCount,
+      speedKmh: location.speedKmh,
+      progressPercent: location.progressPercent,
+      remainingDistanceKm: location.remainingDistanceKm,
+      estimatedArrival: location.estimatedArrival?.toISOString() ?? null,
+      live: Date.now() - location.calculatedAt.getTime() <= 2 * 60 * 1000,
     };
   }
 }

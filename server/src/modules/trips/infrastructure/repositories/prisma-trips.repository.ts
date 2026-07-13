@@ -9,6 +9,7 @@ import {
 } from '@modules/trips/application/ports/trips.repository';
 import { Trip } from '@modules/trips/domain/trip';
 import { TripDetails } from '@modules/trips/domain/trip-details';
+import { ActiveTrip } from '@modules/trips/domain/active-trip';
 
 @Injectable()
 export class PrismaTripsRepository implements TripsRepository {
@@ -68,6 +69,10 @@ export class PrismaTripsRepository implements TripsRepository {
         accommodations: {
           orderBy: { price: 'asc' },
         },
+        boatLocations: {
+          orderBy: { calculatedAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -78,9 +83,17 @@ export class PrismaTripsRepository implements TripsRepository {
       'em-transito': 'EM TRÂNSITO',
       'no-porto': 'NO PORTO',
       programado: 'PROGRAMADO',
+      embarcando: 'EMBARCANDO',
+      concluido: 'CONCLUÍDO',
+      cancelado: 'CANCELADO',
+      atrasado: 'ATRASADO',
     };
     const statusLabel = statusLabelMap[status];
 
+    const latestLocation = trip.boatLocations[0];
+    const live = latestLocation
+      ? Date.now() - latestLocation.calculatedAt.getTime() <= 2 * 60 * 1000
+      : false;
     return {
       id: trip.id,
       name: trip.boatName,
@@ -111,6 +124,18 @@ export class PrismaTripsRepository implements TripsRepository {
         description: item.description ?? undefined,
       })),
       notificationsEnabled: false,
+      tracking: {
+        available: Boolean(latestLocation),
+        live,
+        lastPositionAt: latestLocation?.calculatedAt.toISOString() ?? null,
+        contributorCount: latestLocation?.contributorCount ?? 0,
+        confidenceLevel: latestLocation?.confidenceLevel ?? 'BAIXO',
+        speedKmh: latestLocation?.speedKmh ?? null,
+        progressPercent: latestLocation?.progressPercent ?? null,
+        remainingDistanceKm: latestLocation?.remainingDistanceKm ?? null,
+        estimatedArrival:
+          latestLocation?.estimatedArrival?.toISOString() ?? null,
+      },
     };
   }
 
@@ -125,6 +150,10 @@ export class PrismaTripsRepository implements TripsRepository {
       departureTime: input.departureTime,
       latitude: input.latitude,
       longitude: input.longitude,
+      originLatitude: input.originLatitude,
+      originLongitude: input.originLongitude,
+      destinationLatitude: input.destinationLatitude,
+      destinationLongitude: input.destinationLongitude,
       ...(input.status
         ? {
             status: input.status.replaceAll('-', '_') as TripStatus,
@@ -218,5 +247,71 @@ export class PrismaTripsRepository implements TripsRepository {
       origins: origins.map((item) => item.origin),
       destinations: destinations.map((item) => item.destination),
     };
+  }
+
+  async listActive(filters?: {
+    origin?: string;
+    destination?: string;
+  }): Promise<ActiveTrip[]> {
+    const trips = await this.prisma.trip.findMany({
+      where: {
+        status: 'em_transito',
+        ...(filters?.origin
+          ? { origin: { equals: filters.origin, mode: 'insensitive' } }
+          : {}),
+        ...(filters?.destination
+          ? {
+              destination: {
+                equals: filters.destination,
+                mode: 'insensitive',
+              },
+            }
+          : {}),
+      },
+      orderBy: { departureDate: 'asc' },
+      include: {
+        boatLocations: { orderBy: { calculatedAt: 'desc' }, take: 1 },
+      },
+    });
+
+    return trips.map((trip) => {
+      const location = trip.boatLocations[0];
+      return {
+        id: trip.id,
+        boatName: trip.boatName,
+        boatType: trip.boatType,
+        origin: trip.origin,
+        destination: trip.destination,
+        departureTime: trip.departureTime,
+        price: `R$ ${trip.price}`,
+        status: 'em-transito' as const,
+        live: Boolean(
+          location && Date.now() - location.calculatedAt.getTime() <= 120_000,
+        ),
+        position: location
+          ? {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              calculatedAt: location.calculatedAt.toISOString(),
+            }
+          : null,
+        confidenceLevel: location?.confidenceLevel ?? 'BAIXO',
+        contributorCount: location?.contributorCount ?? 0,
+        speedKmh: location?.speedKmh ?? null,
+        progressPercent: location?.progressPercent ?? null,
+        remainingDistanceKm: location?.remainingDistanceKm ?? null,
+        estimatedArrival: location?.estimatedArrival?.toISOString() ?? null,
+      };
+    });
+  }
+
+  async updateStatus(id: string, status: string): Promise<TripDetails | null> {
+    const existing = await this.prisma.trip.findUnique({ where: { id } });
+    if (!existing) return null;
+    await this.prisma.trip.update({
+      where: { id },
+      data: { status: status.replaceAll('-', '_') as TripStatus },
+    });
+    return this.findDetailsById(id);
   }
 }

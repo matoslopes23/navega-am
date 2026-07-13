@@ -5,6 +5,11 @@ export interface LastKnownLocation {
   longitude: number;
   confidenceLevel: ConfidenceLevel;
   calculatedAt: Date;
+  contributorCount: number;
+  speedKmh: number | null;
+  progressPercent: number | null;
+  remainingDistanceKm: number | null;
+  estimatedArrival: Date | null;
 }
 
 export interface TrackingQueryRepositoryPort {

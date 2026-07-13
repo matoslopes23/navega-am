@@ -1,5 +1,6 @@
 import { Trip } from '@modules/trips/domain/trip';
 import { TripDetails } from '@modules/trips/domain/trip-details';
+import { ActiveTrip } from '@modules/trips/domain/active-trip';
 
 export type TripsSearchFilters = {
   origin: string;
@@ -29,6 +30,10 @@ export type CreateTripInput = {
   status?: 'em-transito' | 'no-porto' | 'programado';
   latitude: number;
   longitude: number;
+  originLatitude?: number;
+  originLongitude?: number;
+  destinationLatitude?: number;
+  destinationLongitude?: number;
   itinerary?: {
     name: string;
     type: 'saida' | 'escala' | 'destino';
@@ -56,4 +61,9 @@ export interface TripsRepository {
     },
   ): Promise<TripDetails | null>;
   listLocations(): Promise<{ origins: string[]; destinations: string[] }>;
+  listActive(filters?: {
+    origin?: string;
+    destination?: string;
+  }): Promise<ActiveTrip[]>;
+  updateStatus(id: string, status: string): Promise<TripDetails | null>;
 }

@@ -40,6 +40,25 @@ públicas; contribuições e tracking exigem autenticação; criação de viagen
 papel `ADMIN`. Para criar o primeiro administrador, configure `ADMIN_EMAIL`,
 `ADMIN_PASSWORD` e `ADMIN_CPF` e execute `npm run prisma:seed`.
 
+## 🚤 Viagens ativas e colaboração
+
+- `GET /trips/active` — viagens em trânsito, posição, confiança e métricas.
+- `GET /trips/:id` — detalhes com o objeto `tracking` e estado `live`.
+- `POST /trips/:id/tracking/start` — inicia o compartilhamento.
+- `POST /trips/:id/tracking/heartbeat` — mantém a sessão ativa.
+- `POST /trips/:id/tracking/stop` — encerra o compartilhamento.
+- `GET /trips/:id/tracking/status` — confiança, colaboradores e recência.
+- `POST /tracking/sync` — sincroniza até 100 pontos GPS; requer sessão ativa.
+- `POST /trips/:id/reports` — relata atraso, parada, problema ou segurança.
+- `POST /trips/:id/reports/manual-position` — envia posição para moderação.
+- `GET /trips/:id/reports/summary` — resumo das últimas seis horas.
+- `PATCH /trips/:id/status` — transição operacional, exclusiva de `ADMIN`.
+
+Uma posição é considerada `live` quando foi calculada nos últimos dois minutos.
+O cliente deve enviar heartbeat durante o compartilhamento. Sessões sem heartbeat
+expiram automaticamente. Progresso, distância e ETA são retornados somente quando
+a viagem possui `destinationLatitude` e `destinationLongitude`.
+
 ## �️ Banco de dados (Postgres + Prisma)
 
 Este backend usa **Prisma** como ORM e **PostgreSQL**.

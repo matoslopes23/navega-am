@@ -6,6 +6,10 @@ export interface RawLocationInput {
   latitude: number;
   longitude: number;
   pingedAt: Date;
+  clientPointId?: string;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
 }
 
 export interface SaveBoatLocationInput {
@@ -14,11 +18,28 @@ export interface SaveBoatLocationInput {
   longitude: number;
   confidenceLevel: ConfidenceLevel;
   calculatedAt: Date;
+  contributorCount: number;
+  speedKmh?: number;
+  progressPercent?: number;
+  remainingDistanceKm?: number;
+  estimatedArrival?: Date;
 }
 
 export interface RecentLocation {
   latitude: number;
   longitude: number;
+}
+
+export interface TripTrackingContext {
+  originLatitude: number | null;
+  originLongitude: number | null;
+  destinationLatitude: number | null;
+  destinationLongitude: number | null;
+  lastLocation: {
+    latitude: number;
+    longitude: number;
+    calculatedAt: Date;
+  } | null;
 }
 
 export interface TrackingRepositoryPort {
@@ -28,4 +49,5 @@ export interface TrackingRepositoryPort {
     since: Date,
   ): Promise<RecentLocation[]>;
   saveBoatLocationAndUpdateTrip(data: SaveBoatLocationInput): Promise<void>;
+  getTripTrackingContext(tripId: string): Promise<TripTrackingContext | null>;
 }

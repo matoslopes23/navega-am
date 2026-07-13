@@ -30,6 +30,10 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '@modules/auth/presentation/guards/roles.guard';
 import { Roles } from '@modules/auth/presentation/decorators/roles.decorator';
 import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
+import { ListActiveTripsUseCase } from '../application/use-cases/list-active-trips.usecase';
+import { ActiveTripsQueryDto } from './dto/active-trips-query.dto';
+import { UpdateTripStatusUseCase } from '../application/use-cases/update-trip-status.usecase';
+import { UpdateTripStatusDto } from '../application/dto/update-trip-status.dto';
 
 @ApiTags('Trips')
 @Controller('trips')
@@ -40,6 +44,8 @@ export class TripsController {
     private readonly updateTripContribution: UpdateTripContributionUseCase,
     private readonly listTripLocations: ListTripLocationsUseCase,
     private readonly createTrip: CreateTripUseCase,
+    private readonly listActiveTrips: ListActiveTripsUseCase,
+    private readonly updateTripStatus: UpdateTripStatusUseCase,
   ) {}
 
   @Get('locations')
@@ -81,6 +87,14 @@ export class TripsController {
     );
   }
 
+  @Get('active')
+  @ApiOkResponse({
+    description: 'Lista viagens em trânsito e seu estado ao vivo.',
+  })
+  active(@Query() query: ActiveTripsQueryDto) {
+    return this.listActiveTrips.execute(query.origin, query.destination);
+  }
+
   @Get(':id')
   @ApiOkResponse({
     description: 'Detalhes completos da embarcação e itinerário.',
@@ -106,5 +120,13 @@ export class TripsController {
       userDepartureDate: body.userDepartureDate,
       userDepartureTime: body.userDepartureTime,
     });
+  }
+
+  @Patch(':id/status')
+  @UseGuards(RateLimitGuard, JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  updateStatus(@Param('id') id: string, @Body() body: UpdateTripStatusDto) {
+    return this.updateTripStatus.execute(id, body.status);
   }
 }

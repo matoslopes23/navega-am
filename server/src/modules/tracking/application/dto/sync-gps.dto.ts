@@ -5,8 +5,12 @@ import {
   IsDateString,
   IsLatitude,
   IsLongitude,
-  IsString,
+  IsNumber,
+  IsOptional,
   IsUUID,
+  Max,
+  Min,
+  IsString,
   Length,
   ValidateNested,
 } from 'class-validator';
@@ -21,6 +25,28 @@ class GpsPointDto {
 
   @IsDateString({ strict: true })
   pingedAt: string;
+
+  @IsOptional()
+  @IsUUID()
+  clientPointId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(10000)
+  accuracy?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(150)
+  speed?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(360)
+  heading?: number;
 }
 
 export class SyncGpsDto {

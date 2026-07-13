@@ -6,8 +6,14 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { SearchTripsUseCase } from '@modules/trips/application/use-cases/search-trips.usecase';
 import { GetTripDetailsUseCase } from '@modules/trips/application/use-cases/get-trip-details.usecase';
@@ -20,6 +26,10 @@ import { CreateTripDto } from '@modules/trips/application/dto/create-trip.dto';
 import { TripResponseDto } from '@modules/trips/presentation/dto/trip-response.dto';
 import { TripDetailsResponseDto } from '@modules/trips/presentation/dto/trip-details-response.dto';
 import { TripLocationsResponseDto } from '@modules/trips/presentation/dto/trip-locations-response.dto';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { RolesGuard } from '@modules/auth/presentation/guards/roles.guard';
+import { Roles } from '@modules/auth/presentation/decorators/roles.decorator';
+import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
 
 @ApiTags('Trips')
 @Controller('trips')
@@ -42,6 +52,9 @@ export class TripsController {
   }
 
   @Post()
+  @UseGuards(RateLimitGuard, JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
   @ApiCreatedResponse({
     description: 'Viagem cadastrada com sucesso.',
     type: TripDetailsResponseDto,
@@ -78,6 +91,8 @@ export class TripsController {
   }
 
   @Patch(':id/contribution')
+  @UseGuards(RateLimitGuard, JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOkResponse({
     description: 'Atualiza o horário informado pela comunidade para a viagem.',
     type: TripDetailsResponseDto,

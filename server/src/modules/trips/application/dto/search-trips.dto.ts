@@ -1,6 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class SearchTripsDto {
   @ApiProperty({ example: 'Manaus' })
@@ -15,20 +24,19 @@ export class SearchTripsDto {
 
   @ApiPropertyOptional({ example: '2026-03-06' })
   @IsOptional()
-  @IsString()
-  @Length(8, 10)
+  @IsDateString({ strict: true })
   date?: string;
 
   @ApiPropertyOptional({ example: '06:00' })
   @IsOptional()
   @IsString()
-  @Length(4, 5)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   timeFrom?: string;
 
   @ApiPropertyOptional({ example: '20:00' })
   @IsOptional()
   @IsString()
-  @Length(4, 5)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   timeTo?: string;
 
   @ApiPropertyOptional({ example: 1 })

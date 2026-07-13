@@ -2,12 +2,16 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  ArrayMaxSize,
+  IsDateString,
+  IsLatitude,
+  IsLongitude,
   IsIn,
   IsInt,
-  IsNumber,
   IsOptional,
   IsString,
   Length,
+  Matches,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -25,7 +29,7 @@ export class CreateTripItineraryDto {
 
   @ApiProperty({ example: '08:00' })
   @IsString()
-  @Length(4, 5)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   time!: string;
 
   @ApiProperty({ example: 'Porto de Manaus - Roadway' })
@@ -94,13 +98,12 @@ export class CreateTripDto {
   destination!: string;
 
   @ApiProperty({ example: '2026-03-06' })
-  @IsString()
-  @Length(8, 10)
+  @IsDateString({ strict: true })
   departureDate!: string;
 
   @ApiProperty({ example: '08:00' })
   @IsString()
-  @Length(4, 5)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   departureTime!: string;
 
   @ApiPropertyOptional({
@@ -114,17 +117,18 @@ export class CreateTripDto {
 
   @ApiProperty({ example: -3.119028 })
   @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 6 })
+  @IsLatitude()
   latitude!: number;
 
   @ApiProperty({ example: -60.021731 })
   @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 6 })
+  @IsLongitude()
   longitude!: number;
 
   @ApiPropertyOptional({ type: CreateTripItineraryDto, isArray: true })
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(50)
   @ValidateNested({ each: true })
   @Type(() => CreateTripItineraryDto)
   itinerary?: CreateTripItineraryDto[];
@@ -132,6 +136,7 @@ export class CreateTripDto {
   @ApiPropertyOptional({ type: CreateTripAccommodationDto, isArray: true })
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => CreateTripAccommodationDto)
   accommodations?: CreateTripAccommodationDto[];

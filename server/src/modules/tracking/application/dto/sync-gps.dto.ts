@@ -1,31 +1,40 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsDateString,
+  IsLatitude,
+  IsLongitude,
+  IsString,
+  IsUUID,
+  Length,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class GpsPointDto {
-    @IsNumber()
-    @IsNotEmpty()
-    latitude: number;
+  @IsLatitude()
+  latitude: number;
 
-    @IsNumber()
-    @IsNotEmpty()
-    longitude: number;
+  @IsLongitude()
+  longitude: number;
 
-    @IsString()
-    @IsNotEmpty()
-    pingedAt: string;
+  @IsDateString({ strict: true })
+  pingedAt: string;
 }
 
 export class SyncGpsDto {
-    @IsUUID()
-    @IsNotEmpty()
-    tripId: string;
+  @IsUUID()
+  tripId: string;
 
-    @IsString()
-    @IsNotEmpty()
-    deviceId: string;
+  @IsString()
+  @Length(16, 128)
+  deviceId: string;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => GpsPointDto)
-    locations: GpsPointDto[];
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(100)
+  @ValidateNested({ each: true })
+  @Type(() => GpsPointDto)
+  locations: GpsPointDto[];
 }

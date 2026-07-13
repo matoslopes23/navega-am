@@ -6,6 +6,9 @@ import { AuthController } from '@modules/auth/presentation/auth.controller';
 import { LoginUserUseCase } from '@modules/auth/application/use-cases/login-user.usecase';
 import { RegisterUserUseCase } from '@modules/auth/application/use-cases/register-user.usecase';
 import { UsersModule } from '@modules/users/users.module';
+import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
+import { RolesGuard } from './presentation/guards/roles.guard';
+import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
 
 @Module({
   imports: [
@@ -19,6 +22,13 @@ import { UsersModule } from '@modules/users/users.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [RegisterUserUseCase, LoginUserUseCase],
+  providers: [
+    RegisterUserUseCase,
+    LoginUserUseCase,
+    JwtAuthGuard,
+    RolesGuard,
+    RateLimitGuard,
+  ],
+  exports: [JwtModule, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}

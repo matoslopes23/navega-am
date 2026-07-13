@@ -5,7 +5,17 @@ export const envSchema = Joi.object({
     .valid('development', 'test', 'production')
     .default('development'),
   PORT: Joi.number().default(3000),
-  JWT_SECRET: Joi.string().min(10).required(),
+  JWT_SECRET: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string().min(10).required(),
+  }),
+  DATABASE_URL: Joi.string().required(),
+  DIRECT_URL: Joi.string().default(Joi.ref('DATABASE_URL')),
+  CORS_ORIGINS: Joi.string().default(
+    'http://localhost:8080,http://localhost:5173',
+  ),
+  SWAGGER_ENABLED: Joi.boolean().default(true),
   PING_URL: Joi.string().uri().optional(),
   PING_INTERVAL_MS: Joi.number().min(5000).optional(),
 

@@ -8,8 +8,11 @@ import { ListTripLocationsUseCase } from '@modules/trips/application/use-cases/l
 import { CreateTripUseCase } from '@modules/trips/application/use-cases/create-trip.usecase';
 import { PrismaTripsRepository } from '@modules/trips/infrastructure/repositories/prisma-trips.repository';
 import { TRIPS_REPOSITORY } from '@modules/trips/trips.tokens';
+import { AuthModule } from '@modules/auth/auth.module';
+import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
 
 @Module({
+  imports: [AuthModule],
   controllers: [TripsController],
   providers: [
     SearchTripsUseCase,
@@ -17,6 +20,7 @@ import { TRIPS_REPOSITORY } from '@modules/trips/trips.tokens';
     UpdateTripContributionUseCase,
     ListTripLocationsUseCase,
     CreateTripUseCase,
+    RateLimitGuard,
     {
       provide: TRIPS_REPOSITORY,
       useClass: PrismaTripsRepository,

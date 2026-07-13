@@ -35,6 +35,11 @@ Endpoints principais:
 - `POST /auth/register`
 - `POST /auth/login`
 
+Envie o token como `Authorization: Bearer <token>`. Consultas de viagens são
+públicas; contribuições e tracking exigem autenticação; criação de viagens exige
+papel `ADMIN`. Para criar o primeiro administrador, configure `ADMIN_EMAIL`,
+`ADMIN_PASSWORD` e `ADMIN_CPF` e execute `npm run prisma:seed`.
+
 ## �️ Banco de dados (Postgres + Prisma)
 
 Este backend usa **Prisma** como ORM e **PostgreSQL**.
@@ -49,10 +54,14 @@ docker compose up -d
 
 ### Variáveis de ambiente
 
-Configure o `DATABASE_URL` (veja `.env.example`):
+Configure as variáveis (veja `.env.example`):
 
 ```
 DATABASE_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
+DIRECT_URL="postgresql://navega:navega@localhost:5432/navega?schema=public"
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+JWT_SECRET="use-ao-menos-32-caracteres-em-producao"
 ```
 
 ### Prisma

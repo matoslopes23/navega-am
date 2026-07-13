@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { LoginUserUseCase } from '@modules/auth/application/use-cases/login-user.usecase';
@@ -6,6 +6,7 @@ import { RegisterUserUseCase } from '@modules/auth/application/use-cases/registe
 import { LoginUserDto } from '@modules/auth/presentation/dto/login-user.dto';
 import { RegisterUserDto } from '@modules/auth/presentation/dto/register-user.dto';
 import { AuthResponseDto } from '@modules/auth/presentation/dto/auth-response.dto';
+import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -16,6 +17,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @UseGuards(RateLimitGuard)
   @ApiCreatedResponse({
     description: 'Usuário cadastrado com sucesso.',
     type: AuthResponseDto,
@@ -25,6 +27,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(RateLimitGuard)
   @ApiOkResponse({
     description: 'Login realizado com sucesso.',
     type: AuthResponseDto,

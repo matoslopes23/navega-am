@@ -26,12 +26,14 @@ import { RealTimeModule } from './modules/real-time/real-time.moule';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         connection: {
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
           password: configService.get<string>('REDIS_PASSWORD'),
-          ...(configService.get<string>('REDIS_HOST')?.includes('upstash') ? { tls: {} } : {}),
+          ...(configService.get<string>('REDIS_HOST')?.includes('upstash')
+            ? { tls: {} }
+            : {}),
         },
         defaultJobOptions: {
           removeOnComplete: true,
@@ -56,4 +58,4 @@ import { RealTimeModule } from './modules/real-time/real-time.moule';
   ],
   providers: [UrlPingService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -45,6 +46,23 @@ const CSV_PATH = path.resolve(
 );
 
 async function main() {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminCpf = process.env.ADMIN_CPF?.replace(/\D/g, '');
+  if (adminEmail && adminPassword && adminCpf) {
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { role: 'ADMIN' },
+      create: {
+        name: 'Administrador',
+        email: adminEmail,
+        cpf: adminCpf,
+        passwordHash: await bcrypt.hash(adminPassword, 12),
+        role: 'ADMIN',
+      },
+    });
+  }
+
   const file = fs.readFileSync(CSV_PATH, 'utf-8');
   const lines = file.split(/\r?\n/).filter(Boolean);
   const [, ...rows] = lines;

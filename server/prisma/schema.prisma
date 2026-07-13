@@ -21,6 +21,7 @@ model User {
   phone        String?  @unique
   cpf          String   @unique
   passwordHash String
+  role         UserRole @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -43,7 +44,7 @@ model Trip {
   longitude         Float
   confidenceLevel   ConfidenceLevel @default(BAIXO) // Adicionado para refletir o infográfico
   
-  createdAt         DateTime        @updatedAt
+  createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
   itineraries       Itinerary[]
@@ -138,4 +139,9 @@ enum ConfidenceLevel {
   ALTO
   MEDIO
   BAIXO
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }

@@ -97,7 +97,7 @@ export class PrismaTripsRepository implements TripsRepository {
       itinerary: trip.itineraries.map((item) => ({
         id: item.id,
         name: item.name,
-        type: item.type as TripDetails['itinerary'][number]['type'],
+        type: item.type,
         time: item.time,
         description: item.description,
         status: item.status ?? undefined,

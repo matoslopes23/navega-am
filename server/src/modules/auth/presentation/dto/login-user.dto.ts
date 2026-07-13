@@ -9,6 +9,6 @@ export class LoginUserDto {
 
   @ApiProperty({ example: 'Senha@123' })
   @IsString()
-  @Length(6, 64)
+  @Length(8, 64)
   password!: string;
 }

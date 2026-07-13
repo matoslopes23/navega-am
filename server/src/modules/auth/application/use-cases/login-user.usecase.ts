@@ -20,7 +20,11 @@ export class LoginUserUseCase {
   ) {}
 
   async execute(input: LoginUserInput): Promise<LoginResult> {
-    const user = await this.users.findByEmailOrPhone(input.identifier);
+    const rawIdentifier = input.identifier.trim().toLowerCase();
+    const identifier = rawIdentifier.includes('@')
+      ? rawIdentifier
+      : rawIdentifier.replace(/\D/g, '');
+    const user = await this.users.findByEmailOrPhone(identifier);
     if (!user) {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
@@ -33,6 +37,7 @@ export class LoginUserUseCase {
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
+      role: user.role,
     });
 
     return {
@@ -42,7 +47,7 @@ export class LoginUserUseCase {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        cpf: user.cpf,
+        role: user.role,
       },
     };
   }

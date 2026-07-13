@@ -6,16 +6,25 @@ import { randomUUID } from 'crypto';
   imports: [
     LoggerModule.forRoot({
       pinoHttp: {
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            levelFirst: true,
-            translateTime: 'SYS:standard',
-            singleLine: true,
-            ignore: 'pid,hostname',
-          },
-        },
+        ...(process.env.NODE_ENV !== 'production'
+          ? {
+              transport: {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  levelFirst: true,
+                  translateTime: 'SYS:standard',
+                  singleLine: true,
+                  ignore: 'pid,hostname',
+                },
+              },
+            }
+          : {}),
+        redact: [
+          'req.headers.authorization',
+          'req.body.password',
+          'passwordHash',
+        ],
         genReqId: (request, response) => {
           const existingId = request.headers['x-request-id'];
           if (typeof existingId === 'string') return existingId;

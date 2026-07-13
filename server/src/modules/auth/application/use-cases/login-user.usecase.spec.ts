@@ -19,6 +19,7 @@ describe('LoginUserUseCase', () => {
     phone: '(92) 99999-9999',
     cpf: '000.000.000-00',
     passwordHash: 'hashed',
+    role: 'USER',
     createdAt: new Date(),
     updatedAt: new Date(),
   };

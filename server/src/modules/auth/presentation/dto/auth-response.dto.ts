@@ -13,8 +13,8 @@ export class AuthUserResponseDto {
   @ApiProperty({ example: '(92) 99999-9999', required: false, nullable: true })
   phone?: string | null;
 
-  @ApiProperty({ example: '000.000.000-00' })
-  cpf!: string;
+  @ApiProperty({ example: 'USER', enum: ['USER', 'ADMIN'] })
+  role!: 'USER' | 'ADMIN';
 }
 
 export class AuthResponseDto {

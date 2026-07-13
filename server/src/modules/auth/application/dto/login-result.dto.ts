@@ -5,6 +5,6 @@ export type LoginResult = {
     name: string;
     email: string;
     phone?: string | null;
-    cpf: string;
+    role: 'USER' | 'ADMIN';
   };
 };

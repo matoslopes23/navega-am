@@ -20,6 +20,7 @@ describe('RegisterUserUseCase', () => {
     phone: '(92) 99999-9999',
     cpf: '000.000.000-00',
     passwordHash: 'hashed',
+    role: 'USER',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -78,16 +79,16 @@ describe('RegisterUserUseCase', () => {
     const result = await useCase.execute({
       name: baseUser.name,
       email: baseUser.email,
-      phone: baseUser.phone,
-      cpf: baseUser.cpf,
+      phone: '92999999999',
+      cpf: '00000000000',
       password: 'Senha@123',
     });
 
     expect(repository.create).toHaveBeenCalledWith({
       name: baseUser.name,
       email: baseUser.email,
-      phone: baseUser.phone,
-      cpf: baseUser.cpf,
+      phone: '92999999999',
+      cpf: '00000000000',
       passwordHash: 'hashed',
     });
     expect(result.accessToken).toBe('token');

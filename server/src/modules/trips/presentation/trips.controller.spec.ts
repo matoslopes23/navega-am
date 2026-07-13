@@ -7,6 +7,10 @@ import { GetTripDetailsUseCase } from '@modules/trips/application/use-cases/get-
 import { UpdateTripContributionUseCase } from '@modules/trips/application/use-cases/update-trip-contribution.usecase';
 import { ListTripLocationsUseCase } from '@modules/trips/application/use-cases/list-trip-locations.usecase';
 import { CreateTripUseCase } from '@modules/trips/application/use-cases/create-trip.usecase';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { RolesGuard } from '@modules/auth/presentation/guards/roles.guard';
+import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
+import { JwtService } from '@nestjs/jwt';
 
 describe('TripsController', () => {
   let controller: TripsController;
@@ -36,6 +40,16 @@ describe('TripsController', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [TripsController],
       providers: [
+        { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
+        {
+          provide: JwtAuthGuard,
+          useValue: { canActivate: jest.fn(() => true) },
+        },
+        { provide: RolesGuard, useValue: { canActivate: jest.fn(() => true) } },
+        {
+          provide: RateLimitGuard,
+          useValue: { canActivate: jest.fn(() => true) },
+        },
         {
           provide: SearchTripsUseCase,
           useValue: useCaseMock,

@@ -56,7 +56,7 @@ describe('PrismaUserRepository', () => {
   });
 
   it('create calls prisma', async () => {
-    prisma.user.create.mockResolvedValue({} as never);
+    prisma.user.create.mockResolvedValue({});
 
     await repository.create({
       name: 'João',

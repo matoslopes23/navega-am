@@ -6,19 +6,16 @@ RUN apt-get update -y && apt-get install -y openssl
 
 WORKDIR /app
 
-# Copiar arquivos de configuração
-COPY package.json yarn.lock ./
-COPY prisma ./prisma/
-
-# Instalar TODAS as dependências (yarn)
-RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Gerar o Prisma Client
+COPY prisma ./prisma/
 RUN npx prisma generate
 
 # Copiar o restante do código e compilar
 COPY . .
-RUN yarn build
+RUN npm run build
 
 # ---------------------------------------------------
 # Stage 2: Production
@@ -31,14 +28,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copiar package.json e yarn.lock
-COPY package.json yarn.lock ./
-COPY prisma ./prisma/
-
-# Instalar apenas dependências de produção
-RUN yarn install --production --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 # Gerar o client localmente para a imagem de produção
+COPY prisma ./prisma/
 RUN npx prisma generate
 
 # Copiar a compilação final do estágio builder

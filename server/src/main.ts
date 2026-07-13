@@ -4,11 +4,18 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from '@app/app.module';
 import { HttpExceptionFilter } from '@shared/filters/http-exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
-  app.enableCors();
+  const configService = app.get(ConfigService);
+  const corsOrigins = configService
+    .get<string>('CORS_ORIGINS', '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.enableCors({ origin: corsOrigins, credentials: true });
   app.enableShutdownHooks();
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
@@ -18,13 +25,16 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  const config = new DocumentBuilder()
-    .setTitle('Navega API')
-    .setDescription('API do projeto Navega AM')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
-  await app.listen(process.env.PORT ?? 3000);
+  if (configService.get<boolean>('SWAGGER_ENABLED')) {
+    const config = new DocumentBuilder()
+      .setTitle('Navega API')
+      .setDescription('API do projeto Navega AM')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
+  await app.listen(configService.get<number>('PORT', 3000));
 }
 void bootstrap();

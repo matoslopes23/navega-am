@@ -123,6 +123,17 @@ describe('TripsController', () => {
       accommodationsStatus: 'disponivel',
       accommodations: [],
       notificationsEnabled: false,
+      tracking: {
+        available: true,
+        live: true,
+        lastPositionAt: '2026-03-06T12:00:00.000Z',
+        contributorCount: 3,
+        confidenceLevel: 'MEDIO',
+        speedKmh: 18,
+        progressPercent: 50,
+        remainingDistanceKm: 100,
+        estimatedArrival: null,
+      },
     });
 
     const result = await controller.getDetails('trip-1');
@@ -159,6 +170,17 @@ describe('TripsController', () => {
       accommodationsStatus: 'disponivel',
       accommodations: [],
       notificationsEnabled: false,
+      tracking: {
+        available: false,
+        live: false,
+        lastPositionAt: null,
+        contributorCount: 0,
+        confidenceLevel: 'BAIXO',
+        speedKmh: null,
+        progressPercent: null,
+        remainingDistanceKm: null,
+        estimatedArrival: null,
+      },
     });
 
     const result = await controller.updateContribution('trip-1', {
@@ -188,6 +210,17 @@ describe('TripsController', () => {
       accommodationsStatus: 'disponivel',
       accommodations: [],
       notificationsEnabled: false,
+      tracking: {
+        available: false,
+        live: false,
+        lastPositionAt: null,
+        contributorCount: 0,
+        confidenceLevel: 'BAIXO',
+        speedKmh: null,
+        progressPercent: null,
+        remainingDistanceKm: null,
+        estimatedArrival: null,
+      },
     });
 
     const payload = {

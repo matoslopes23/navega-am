@@ -49,6 +49,22 @@ export type CreateTripInput = {
   }[];
 };
 
+export type CreatePortInput = {
+  name: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters?: number;
+};
+
+export type CreateRiverRouteInput = {
+  name: string;
+  originName: string;
+  destinationName: string;
+  geometry: Record<string, unknown>;
+  distanceKm?: number;
+};
+
 export interface TripsRepository {
   search(filters: TripsSearchFilters): Promise<Trip[]>;
   findDetailsById(id: string): Promise<TripDetails | null>;
@@ -66,4 +82,11 @@ export interface TripsRepository {
     destination?: string;
   }): Promise<ActiveTrip[]>;
   updateStatus(id: string, status: string): Promise<TripDetails | null>;
+  listPorts(): Promise<unknown[]>;
+  createPort(input: CreatePortInput): Promise<unknown>;
+  listRiverRoutes(): Promise<unknown[]>;
+  createRiverRoute(input: CreateRiverRouteInput): Promise<unknown>;
+  assignRoute(tripId: string, routeId: string): Promise<unknown>;
+  getLocationHistory(tripId: string, page: number): Promise<unknown[]>;
+  getTimeline(tripId: string): Promise<unknown[]>;
 }

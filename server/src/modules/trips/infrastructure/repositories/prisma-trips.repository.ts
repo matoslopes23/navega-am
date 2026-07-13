@@ -6,6 +6,8 @@ import {
   TripsRepository,
   CreateTripInput,
   TripsSearchFilters,
+  CreatePortInput,
+  CreateRiverRouteInput,
 } from '@modules/trips/application/ports/trips.repository';
 import { Trip } from '@modules/trips/domain/trip';
 import { TripDetails } from '@modules/trips/domain/trip-details';
@@ -313,5 +315,54 @@ export class PrismaTripsRepository implements TripsRepository {
       data: { status: status.replaceAll('-', '_') as TripStatus },
     });
     return this.findDetailsById(id);
+  }
+
+  listPorts(): Promise<unknown[]> {
+    return this.prisma.port.findMany({
+      orderBy: [{ city: 'asc' }, { name: 'asc' }],
+    });
+  }
+
+  createPort(input: CreatePortInput): Promise<unknown> {
+    return this.prisma.port.create({ data: input });
+  }
+
+  listRiverRoutes(): Promise<unknown[]> {
+    return this.prisma.riverRoute.findMany({ orderBy: { name: 'asc' } });
+  }
+
+  createRiverRoute(input: CreateRiverRouteInput): Promise<unknown> {
+    return this.prisma.riverRoute.create({
+      data: { ...input, geometry: input.geometry as Prisma.InputJsonValue },
+    });
+  }
+
+  assignRoute(tripId: string, routeId: string): Promise<unknown> {
+    return this.prisma.trip.update({
+      where: { id: tripId },
+      data: { routeId },
+    });
+  }
+
+  async getLocationHistory(tripId: string, page: number): Promise<unknown[]> {
+    const items = await this.prisma.boatLocation.findMany({
+      where: { tripId },
+      orderBy: { calculatedAt: 'desc' },
+      skip: (page - 1) * 100,
+      take: 100,
+    });
+    return items.map((item) => ({
+      ...item,
+      latitude: Math.round(item.latitude * 1000) / 1000,
+      longitude: Math.round(item.longitude * 1000) / 1000,
+    }));
+  }
+
+  getTimeline(tripId: string): Promise<unknown[]> {
+    return this.prisma.tripTimelineEvent.findMany({
+      where: { tripId },
+      orderBy: { occurredAt: 'desc' },
+      take: 100,
+    });
   }
 }

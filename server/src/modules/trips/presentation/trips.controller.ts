@@ -12,6 +12,9 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 
@@ -49,6 +52,7 @@ export class TripsController {
   ) {}
 
   @Get('locations')
+  @ApiOperation({ summary: 'Lista origens e destinos cadastrados' })
   @ApiOkResponse({
     description: 'Lista de origens e destinos disponíveis nas viagens.',
     type: TripLocationsResponseDto,
@@ -58,6 +62,7 @@ export class TripsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Cadastra viagem completa (ADMIN)' })
   @UseGuards(RateLimitGuard, JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiBearerAuth()
@@ -70,6 +75,7 @@ export class TripsController {
   }
 
   @Get('search')
+  @ApiOperation({ summary: 'Busca viagens por rota, data e faixa de horário' })
   @ApiOkResponse({
     description: 'Lista de viagens filtradas por origem/destino e horários.',
     type: TripResponseDto,
@@ -88,6 +94,9 @@ export class TripsController {
   }
 
   @Get('active')
+  @ApiOperation({
+    summary: 'Lista viagens em trânsito com posição e métricas LIVE',
+  })
   @ApiOkResponse({
     description: 'Lista viagens em trânsito e seu estado ao vivo.',
   })
@@ -96,6 +105,11 @@ export class TripsController {
   }
 
   @Get(':id')
+  @ApiOperation({
+    summary: 'Obtém detalhes, itinerário, acomodações e tracking',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiResponse({ status: 404, description: 'Viagem não encontrada.' })
   @ApiOkResponse({
     description: 'Detalhes completos da embarcação e itinerário.',
     type: TripDetailsResponseDto,
@@ -105,6 +119,8 @@ export class TripsController {
   }
 
   @Patch(':id/contribution')
+  @ApiOperation({ summary: 'Contribui com data/horário observado' })
+  @ApiParam({ name: 'id', format: 'uuid' })
   @UseGuards(RateLimitGuard, JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({
@@ -123,6 +139,9 @@ export class TripsController {
   }
 
   @Patch(':id/status')
+  @ApiOperation({ summary: 'Executa transição operacional de status (ADMIN)' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiResponse({ status: 400, description: 'Transição de estado inválida.' })
   @UseGuards(RateLimitGuard, JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiBearerAuth()

@@ -33,6 +33,15 @@ export class ProcessGpsBatchUseCase {
         accuracy: loc.accuracy,
         speed: loc.speed,
         heading: loc.heading,
+        accepted:
+          (loc.accuracy === undefined || loc.accuracy <= 2000) &&
+          (loc.speed === undefined || loc.speed <= 55),
+        rejectionReason:
+          loc.accuracy !== undefined && loc.accuracy > 2000
+            ? 'LOW_ACCURACY'
+            : loc.speed !== undefined && loc.speed > 55
+              ? 'IMPOSSIBLE_SPEED'
+              : undefined,
       }));
       await this.repository.saveRawLocations(rawData);
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -104,18 +113,30 @@ export class ProcessGpsBatchUseCase {
         context.destinationLatitude != null &&
         context.destinationLongitude != null
       ) {
-        const totalDistance = distanceKm(
+        const directTotalDistance = distanceKm(
           context.originLatitude,
           context.originLongitude,
           context.destinationLatitude,
           context.destinationLongitude,
         );
-        remainingDistanceKm = distanceKm(
-          latitude,
-          longitude,
-          context.destinationLatitude,
-          context.destinationLongitude,
-        );
+        const totalDistance = context.routeDistanceKm ?? directTotalDistance;
+        remainingDistanceKm = context.routeDistanceKm
+          ? Math.max(
+              0,
+              totalDistance -
+                distanceKm(
+                  context.originLatitude,
+                  context.originLongitude,
+                  latitude,
+                  longitude,
+                ),
+            )
+          : distanceKm(
+              latitude,
+              longitude,
+              context.destinationLatitude,
+              context.destinationLongitude,
+            );
         if (totalDistance > 0) {
           progressPercent = Math.max(
             0,
@@ -146,6 +167,11 @@ export class ProcessGpsBatchUseCase {
       };
 
       await this.repository.saveBoatLocationAndUpdateTrip(boatLocationData);
+      await this.repository.recordNearbyPortApproach(
+        tripId,
+        latitude,
+        longitude,
+      );
       this.realTimeEmitter.emitLocationUpdate(tripId, boatLocationData);
     } catch (error: unknown) {
       const stack = error instanceof Error ? error.stack : undefined;

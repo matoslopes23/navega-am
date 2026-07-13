@@ -22,11 +22,17 @@ model User {
   cpf          String   @unique
   passwordHash String
   role         UserRole @default(USER)
+  locationConsentAt DateTime?
+  locationConsentRevokedAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   trackingParticipations TrackingParticipant[]
   tripReports            TripReport[]
+  notificationDevices    NotificationDevice[]
+  notificationSubscriptions TripNotificationSubscription[]
+  notifications          Notification[]
+  auditLogs              AuditLog[]
 }
 
 model Trip {
@@ -50,6 +56,8 @@ model Trip {
   originLongitude   Float?
   destinationLatitude  Float?
   destinationLongitude Float?
+  trackingLive      Boolean         @default(false)
+  routeId           String?
   confidenceLevel   ConfidenceLevel @default(BAIXO) // Adicionado para refletir o infográfico
   
   createdAt         DateTime        @default(now())
@@ -63,6 +71,10 @@ model Trip {
   boatLocations     BoatLocation[]
   trackingParticipants TrackingParticipant[]
   reports           TripReport[]
+  timelineEvents    TripTimelineEvent[]
+  notificationSubscriptions TripNotificationSubscription[]
+  notifications     Notification[]
+  route             RiverRoute? @relation(fields: [routeId], references: [id], onDelete: SetNull)
 
   @@index([origin, destination])
   @@index([departureDate])
@@ -111,6 +123,8 @@ model RawLocation {
   accuracy      Float?
   speed         Float?
   heading       Float?
+  accepted      Boolean  @default(true)
+  rejectionReason String?
   createdAt DateTime @default(now())
 
   trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -118,6 +132,32 @@ model RawLocation {
   @@index([tripId])
   @@index([pingedAt]) // Otimiza a query do Worker de buscar os últimos 5 minutos
   @@unique([tripId, deviceId, clientPointId])
+}
+
+model Port {
+  id        String   @id @default(uuid())
+  name      String
+  city      String
+  latitude  Float
+  longitude Float
+  radiusMeters Int   @default(1000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, city])
+}
+
+model RiverRoute {
+  id          String   @id @default(uuid())
+  name        String
+  originName  String
+  destinationName String
+  geometry    Json
+  distanceKm  Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trips Trip[]
 }
 
 model BoatLocation {
@@ -172,6 +212,72 @@ model TripReport {
   @@index([tripId, status, createdAt])
 }
 
+model TripTimelineEvent {
+  id        String   @id @default(uuid())
+  tripId    String
+  type      TimelineEventType
+  title     String
+  metadata  Json?
+  occurredAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  @@index([tripId, occurredAt])
+}
+
+model NotificationDevice {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, active])
+}
+
+model TripNotificationSubscription {
+  id        String   @id @default(uuid())
+  tripId    String
+  userId    String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([tripId, userId])
+  @@index([userId, active])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  tripId    String?
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  trip Trip? @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, readAt, createdAt])
+  @@index([sentAt, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([entity, entityId, createdAt])
+}
+
 // ==========================================
 // ENUMS
 // ==========================================
@@ -217,4 +323,13 @@ enum TripReportStatus {
   PENDING
   CONFIRMED
   REJECTED
+}
+
+enum TimelineEventType {
+  TRACKING_STARTED
+  TRACKING_STOPPED
+  STATUS_CHANGED
+  POSITION_UPDATED
+  PORT_APPROACH
+  REPORT_CONFIRMED
 }

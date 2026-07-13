@@ -59,6 +59,38 @@ O cliente deve enviar heartbeat durante o compartilhamento. Sessões sem heartbe
 expiram automaticamente. Progresso, distância e ETA são retornados somente quando
 a viagem possui `destinationLatitude` e `destinationLongitude`.
 
+## 🔔 Alertas e notificações
+
+- `POST /users/me/devices` — registra token Expo/FCM.
+- `POST|DELETE /trips/:id/subscriptions` — ativa ou desativa alertas.
+- `GET /users/me/subscriptions` — viagens acompanhadas pelo usuário.
+- `GET /users/me/notifications` — caixa de notificações paginada.
+- `PATCH /users/me/notifications/:id/read` — marca como lida.
+
+As notificações são persistidas como outbox com `sentAt = null`. Um adaptador Expo/FCM
+pode consumir essa fila sem acoplar credenciais externas ao domínio.
+
+## 🗺️ Rotas, histórico e operação
+
+- `GET /trips/:id/location-history` — histórico público com precisão reduzida.
+- `GET /trips/:id/timeline` — eventos operacionais da viagem.
+- `GET|POST /operations/ports` — portos e raios de geofencing (`ADMIN`).
+- `GET|POST /operations/routes` — geometrias GeoJSON (`ADMIN`).
+- `PATCH /operations/trips/:id/route` — associa uma rota à viagem (`ADMIN`).
+- `GET /tracking/metrics` — indicadores operacionais (`ADMIN`).
+
+O backend expira colaboradores e estados `live` a cada minuto, registra aproximação
+de portos, rejeita GPS com baixa precisão/velocidade impossível e remove posições
+brutas após 30 dias.
+
+## 👤 Perfil e privacidade
+
+- `GET|PATCH|DELETE /users/me` — consulta, atualização e exclusão da conta.
+- `PATCH /users/me/location-consent` — concede ou revoga consentimento.
+- `GET /users/me/export` — exporta os dados pessoais e contribuições.
+
+O compartilhamento GPS só pode começar depois do consentimento explícito.
+
 ## �️ Banco de dados (Postgres + Prisma)
 
 Este backend usa **Prisma** como ORM e **PostgreSQL**.

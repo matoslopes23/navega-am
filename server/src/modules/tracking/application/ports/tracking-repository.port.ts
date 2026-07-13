@@ -10,6 +10,8 @@ export interface RawLocationInput {
   accuracy?: number;
   speed?: number;
   heading?: number;
+  accepted?: boolean;
+  rejectionReason?: string;
 }
 
 export interface SaveBoatLocationInput {
@@ -35,6 +37,7 @@ export interface TripTrackingContext {
   originLongitude: number | null;
   destinationLatitude: number | null;
   destinationLongitude: number | null;
+  routeDistanceKm: number | null;
   lastLocation: {
     latitude: number;
     longitude: number;
@@ -50,4 +53,9 @@ export interface TrackingRepositoryPort {
   ): Promise<RecentLocation[]>;
   saveBoatLocationAndUpdateTrip(data: SaveBoatLocationInput): Promise<void>;
   getTripTrackingContext(tripId: string): Promise<TripTrackingContext | null>;
+  recordNearbyPortApproach(
+    tripId: string,
+    latitude: number,
+    longitude: number,
+  ): Promise<void>;
 }

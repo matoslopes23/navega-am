@@ -12,10 +12,21 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { RateLimitGuard } from '@shared/guards/rate-limit.guard';
 import { ListActiveTripsUseCase } from './application/use-cases/list-active-trips.usecase';
 import { UpdateTripStatusUseCase } from './application/use-cases/update-trip-status.usecase';
+import { ManageTripOperationsUseCase } from './application/use-cases/manage-trip-operations.usecase';
+import { GetTripHistoryUseCase } from './application/use-cases/get-trip-history.usecase';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
+import {
+  TripHistoryController,
+  TripOperationsController,
+} from './presentation/trip-operations.controller';
 
 @Module({
-  imports: [AuthModule],
-  controllers: [TripsController],
+  imports: [AuthModule, NotificationsModule],
+  controllers: [
+    TripsController,
+    TripOperationsController,
+    TripHistoryController,
+  ],
   providers: [
     SearchTripsUseCase,
     GetTripDetailsUseCase,
@@ -24,6 +35,8 @@ import { UpdateTripStatusUseCase } from './application/use-cases/update-trip-sta
     CreateTripUseCase,
     ListActiveTripsUseCase,
     UpdateTripStatusUseCase,
+    ManageTripOperationsUseCase,
+    GetTripHistoryUseCase,
     RateLimitGuard,
     {
       provide: TRIPS_REPOSITORY,

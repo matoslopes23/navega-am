@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HealthEchoDto } from '@modules/health/presentation/dto/health-echo.dto';
 import { GetHealthQuery } from '@modules/health/application/queries/get-health.query';
 import { EchoHealthCommand } from '@modules/health/application/commands/echo-health.command';
@@ -20,6 +20,7 @@ export class HealthController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'Consulta a disponibilidade básica da API' })
   @ApiOkResponse({
     description: 'Status básico de saúde da API.',
     type: HealthStatusResponseDto,
@@ -29,6 +30,7 @@ export class HealthController {
   }
 
   @Get('echo')
+  @ApiOperation({ summary: 'Testa o processamento de parâmetros da API' })
   @ApiOkResponse({
     description: 'Ecoa a mensagem enviada na query string.',
     type: HealthEchoResponseDto,
@@ -38,6 +40,7 @@ export class HealthController {
   }
 
   @Get('metrics')
+  @ApiOperation({ summary: 'Consulta métricas de runtime da API' })
   @ApiOkResponse({
     description: 'Métricas de runtime do serviço.',
     type: HealthMetricsResponseDto,

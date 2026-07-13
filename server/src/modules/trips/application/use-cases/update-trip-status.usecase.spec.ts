@@ -2,13 +2,21 @@
 import { BadRequestException } from '@nestjs/common';
 import type { TripsRepository } from '../ports/trips.repository';
 import { UpdateTripStatusUseCase } from './update-trip-status.usecase';
+import type { NotificationService } from '@modules/notifications/application/notification.service';
+import type { PrismaService } from '@shared/prisma/prisma.service';
 
 describe('UpdateTripStatusUseCase', () => {
   const repository = {
     findDetailsById: jest.fn(),
     updateStatus: jest.fn(),
   } as unknown as jest.Mocked<TripsRepository>;
-  const useCase = new UpdateTripStatusUseCase(repository);
+  const notifications = { notifyTrip: jest.fn() };
+  const prisma = { tripTimelineEvent: { create: jest.fn() } };
+  const useCase = new UpdateTripStatusUseCase(
+    repository,
+    notifications as unknown as NotificationService,
+    prisma as unknown as PrismaService,
+  );
 
   beforeEach(() => jest.clearAllMocks());
 

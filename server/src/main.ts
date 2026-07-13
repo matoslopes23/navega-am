@@ -28,9 +28,27 @@ async function bootstrap() {
   if (configService.get<boolean>('SWAGGER_ENABLED')) {
     const config = new DocumentBuilder()
       .setTitle('Navega API')
-      .setDescription('API do projeto Navega AM')
-      .setVersion('1.0')
-      .addBearerAuth()
+      .setDescription(
+        'API oficial do Navega AM para consulta de viagens, rastreamento colaborativo em tempo real, relatos, notificações e operação administrativa. Consulte também os guias em /docs na raiz do repositório.',
+      )
+      .setVersion('1.0.0')
+      .addServer('http://localhost:3000', 'Desenvolvimento local')
+      .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Token retornado por POST /auth/login ou /auth/register.',
+      })
+      .addTag('System', 'Identificação do serviço')
+      .addTag('Health', 'Saúde e métricas básicas da API')
+      .addTag('Home', 'Dados consolidados para a tela inicial')
+      .addTag('Auth', 'Cadastro e autenticação')
+      .addTag('Users', 'Perfil, consentimento e privacidade')
+      .addTag('Trips', 'Busca, detalhes e viagens ativas')
+      .addTag('Tracking', 'Compartilhamento e telemetria GPS')
+      .addTag('Trip reports', 'Relatos colaborativos e moderação')
+      .addTag('Notifications', 'Alertas e dispositivos push')
+      .addTag('Operations', 'Portos, rotas e administração')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('docs', app, document);

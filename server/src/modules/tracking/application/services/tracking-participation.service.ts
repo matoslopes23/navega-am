@@ -24,6 +24,15 @@ export class TrackingParticipationService {
 
   async start(tripId: string, userId: string) {
     await this.ensureActiveTrip(tripId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { locationConsentAt: true, locationConsentRevokedAt: true },
+    });
+    if (!user?.locationConsentAt || user.locationConsentRevokedAt) {
+      throw new BadRequestException(
+        'É necessário consentir com o compartilhamento de localização.',
+      );
+    }
     const now = new Date();
     await this.prisma.trackingParticipant.upsert({
       where: { tripId_userId: { tripId, userId } },
@@ -33,6 +42,13 @@ export class TrackingParticipationService {
         startedAt: now,
         lastSeenAt: now,
         stoppedAt: null,
+      },
+    });
+    await this.prisma.tripTimelineEvent.create({
+      data: {
+        tripId,
+        type: 'TRACKING_STARTED',
+        title: 'Um passageiro iniciou o compartilhamento',
       },
     });
     return this.status(tripId, userId);
@@ -53,6 +69,13 @@ export class TrackingParticipationService {
     await this.prisma.trackingParticipant.updateMany({
       where: { tripId, userId },
       data: { active: false, stoppedAt: new Date() },
+    });
+    await this.prisma.tripTimelineEvent.create({
+      data: {
+        tripId,
+        type: 'TRACKING_STOPPED',
+        title: 'Um passageiro encerrou o compartilhamento',
+      },
     });
     return this.status(tripId, userId);
   }

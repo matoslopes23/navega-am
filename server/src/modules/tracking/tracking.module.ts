@@ -20,6 +20,7 @@ import { TrackingParticipationController } from './presentation/tracking-partici
 import { TripReportController } from './presentation/trip-report.controller';
 import { TrackingParticipationService } from './application/services/tracking-participation.service';
 import { TripReportService } from './application/services/trip-report.service';
+import { TrackingMaintenanceService } from './application/services/tracking-maintenance.service';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { TripReportService } from './application/services/trip-report.service';
     RateLimitGuard,
     TrackingParticipationService,
     TripReportService,
+    TrackingMaintenanceService,
 
     // Workers / Processors
     TrackingProcessor,

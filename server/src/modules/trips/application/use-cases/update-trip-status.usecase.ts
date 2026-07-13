@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import type { TripsRepository } from '../ports/trips.repository';
 import { TRIPS_REPOSITORY } from '../../trips.tokens';
+import { NotificationService } from '@modules/notifications/application/notification.service';
+import { PrismaService } from '@shared/prisma/prisma.service';
 
 export type OperationalTripStatus =
   | 'programado'
@@ -20,6 +22,8 @@ export type OperationalTripStatus =
 export class UpdateTripStatusUseCase {
   constructor(
     @Inject(TRIPS_REPOSITORY) private readonly repository: TripsRepository,
+    private readonly notifications: NotificationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async execute(id: string, status: OperationalTripStatus) {
@@ -39,6 +43,23 @@ export class UpdateTripStatusUseCase {
         `Transição inválida: ${current.status} → ${status}.`,
       );
     }
-    return this.repository.updateStatus(id, status);
+    const updated = await this.repository.updateStatus(id, status);
+    await Promise.all([
+      this.prisma.tripTimelineEvent.create({
+        data: {
+          tripId: id,
+          type: 'STATUS_CHANGED',
+          title: `Status alterado para ${status}`,
+          metadata: { previousStatus: current.status, status },
+        },
+      }),
+      this.notifications.notifyTrip(
+        id,
+        'STATUS_CHANGED',
+        'Atualização da viagem',
+        `O status da viagem mudou para ${status}.`,
+      ),
+    ]);
+    return updated;
   }
 }

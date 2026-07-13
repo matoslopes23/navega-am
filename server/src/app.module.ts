@@ -13,6 +13,7 @@ import { TripsModule } from '@modules/trips/trips.module';
 import { UrlPingService } from '@shared/jobs/url-ping.service';
 import { TrackingModule } from './modules/tracking/tracking.module';
 import { RealTimeModule } from './modules/real-time/real-time.moule';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { RealTimeModule } from './modules/real-time/real-time.moule';
     HealthModule,
     TrackingModule,
     RealTimeModule,
+    NotificationsModule,
   ],
   providers: [UrlPingService],
 })

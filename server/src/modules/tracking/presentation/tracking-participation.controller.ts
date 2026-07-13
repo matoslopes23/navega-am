@@ -7,7 +7,13 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import type { AuthUser } from '@modules/auth/application/auth-user';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
@@ -22,6 +28,16 @@ export class TrackingParticipationController {
   constructor(private readonly service: TrackingParticipationService) {}
 
   @Post('start')
+  @ApiOperation({
+    summary: 'Inicia o compartilhamento de localização',
+    description:
+      'Exige viagem em trânsito e consentimento de localização previamente concedido.',
+  })
+  @ApiParam({ name: 'tripId', format: 'uuid' })
+  @ApiResponse({
+    status: 201,
+    description: 'Sessão ativa; iniciar heartbeat e sincronização GPS.',
+  })
   start(
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Req() req: Request & { user: AuthUser },
@@ -30,6 +46,12 @@ export class TrackingParticipationController {
   }
 
   @Post('heartbeat')
+  @ApiOperation({
+    summary: 'Mantém a sessão de compartilhamento ativa',
+    description:
+      'Enviar antes de completar dois minutos desde o heartbeat anterior.',
+  })
+  @ApiParam({ name: 'tripId', format: 'uuid' })
   heartbeat(
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Req() req: Request & { user: AuthUser },
@@ -38,6 +60,8 @@ export class TrackingParticipationController {
   }
 
   @Post('stop')
+  @ApiOperation({ summary: 'Encerra voluntariamente o compartilhamento' })
+  @ApiParam({ name: 'tripId', format: 'uuid' })
   stop(
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Req() req: Request & { user: AuthUser },
@@ -46,6 +70,8 @@ export class TrackingParticipationController {
   }
 
   @Get('status')
+  @ApiOperation({ summary: 'Consulta estado LIVE, confiança e colaboradores' })
+  @ApiParam({ name: 'tripId', format: 'uuid' })
   status(
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Req() req: Request & { user: AuthUser },
